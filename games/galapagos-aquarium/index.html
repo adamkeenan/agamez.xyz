@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a1628">
+  <title>Galápagos Aquarium</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { 
+      overflow: hidden; 
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+    #root { width: 100%; height: 100%; }
+    button { -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    // Game Constants
+    const ISLANDS = [
+      { id: 1, name: 'Santa Cruz', unlockRequirement: 0, tankUpgradeCost: 0, background: 'linear-gradient(180deg, #0a3d62 0%, #1e5f74 50%, #2c8a7c 100%)' },
+      { id: 2, name: 'Isabela', unlockRequirement: 5, tankUpgradeCost: 200, background: 'linear-gradient(180deg, #0c2461 0%, #1e3799 50%, #4a69bd 100%)' },
+      { id: 3, name: 'Fernandina', unlockRequirement: 5, tankUpgradeCost: 400, background: 'linear-gradient(180deg, #006266 0%, #009432 50%, #A3CB38 100%)' },
+      { id: 4, name: 'San Cristóbal', unlockRequirement: 5, tankUpgradeCost: 600, background: 'linear-gradient(180deg, #1B1464 0%, #5758BB 50%, #9980FA 100%)' },
+      { id: 5, name: 'Española', unlockRequirement: 5, tankUpgradeCost: 800, background: 'linear-gradient(180deg, #0c2461 0%, #6F1E51 50%, #B33771 100%)' }
+    ];
+
+    const FISH_SPECIES = {
+      1: [
+        { id: 'feeder1', name: 'Sardine', size: 1, buyPrice: 5, sellPrice: 3, color: '#c0c0c0', rarity: 'common' },
+        { id: 'small1', name: 'Damselfish', size: 2, buyPrice: 15, sellPrice: 10, color: '#4ECDC4', rarity: 'common' },
+        { id: 'med1', name: 'Parrotfish', size: 3, buyPrice: 40, sellPrice: 28, color: '#FF6B6B', rarity: 'uncommon' },
+        { id: 'large1', name: 'Yellowfin Tuna', size: 4, buyPrice: 100, sellPrice: 70, color: '#FFE66D', rarity: 'rare' },
+        { id: 'giant1', name: 'Hammerhead Shark', size: 5, buyPrice: 250, sellPrice: 180, color: '#95afc0', rarity: 'legendary' },
+      ],
+      2: [
+        { id: 'feeder2', name: 'Anchovy', size: 1, buyPrice: 8, sellPrice: 5, color: '#a8d5ba', rarity: 'common' },
+        { id: 'small2', name: 'Butterflyfish', size: 2, buyPrice: 25, sellPrice: 17, color: '#f9ca24', rarity: 'common' },
+        { id: 'med2', name: 'Triggerfish', size: 3, buyPrice: 60, sellPrice: 42, color: '#6c5ce7', rarity: 'uncommon' },
+        { id: 'large2', name: 'Mahi Mahi', size: 4, buyPrice: 150, sellPrice: 105, color: '#00cec9', rarity: 'rare' },
+        { id: 'giant2', name: 'Blue Marlin', size: 5, buyPrice: 350, sellPrice: 250, color: '#0984e3', rarity: 'legendary' },
+      ],
+      3: [
+        { id: 'feeder3', name: 'Silverside', size: 1, buyPrice: 12, sellPrice: 8, color: '#dfe6e9', rarity: 'common' },
+        { id: 'small3', name: 'Angelfish', size: 2, buyPrice: 35, sellPrice: 24, color: '#fd79a8', rarity: 'common' },
+        { id: 'med3', name: 'Grouper', size: 3, buyPrice: 85, sellPrice: 60, color: '#e17055', rarity: 'uncommon' },
+        { id: 'large3', name: 'Wahoo', size: 4, buyPrice: 200, sellPrice: 140, color: '#00b894', rarity: 'rare' },
+        { id: 'giant3', name: 'Tiger Shark', size: 5, buyPrice: 450, sellPrice: 320, color: '#636e72', rarity: 'legendary' },
+      ],
+      4: [
+        { id: 'feeder4', name: 'Herring', size: 1, buyPrice: 15, sellPrice: 10, color: '#74b9ff', rarity: 'common' },
+        { id: 'small4', name: 'Moorish Idol', size: 2, buyPrice: 45, sellPrice: 32, color: '#ffeaa7', rarity: 'common' },
+        { id: 'med4', name: 'Barracuda', size: 3, buyPrice: 110, sellPrice: 77, color: '#81ecec', rarity: 'uncommon' },
+        { id: 'large4', name: 'Swordfish', size: 4, buyPrice: 280, sellPrice: 200, color: '#a29bfe', rarity: 'rare' },
+        { id: 'giant4', name: 'Great White', size: 5, buyPrice: 600, sellPrice: 420, color: '#b2bec3', rarity: 'legendary' },
+      ],
+      5: [
+        { id: 'feeder5', name: 'Smelt', size: 1, buyPrice: 20, sellPrice: 14, color: '#fab1a0', rarity: 'common' },
+        { id: 'small5', name: 'Clownfish', size: 2, buyPrice: 60, sellPrice: 42, color: '#e17055', rarity: 'common' },
+        { id: 'med5', name: 'Moray Eel', size: 3, buyPrice: 150, sellPrice: 105, color: '#55a3ff', rarity: 'uncommon' },
+        { id: 'large5', name: 'Mako Shark', size: 4, buyPrice: 380, sellPrice: 266, color: '#636e72', rarity: 'rare' },
+        { id: 'giant5', name: 'Whale Shark', size: 5, buyPrice: 800, sellPrice: 560, color: '#2d3436', rarity: 'legendary' },
+      ]
+    };
+
+    const HUNGER_INTERVAL = 20000;
+    const BREED_INTERVAL = 15000;
+    const BASE_TANK_CAPACITY = 20;
+    const CAPACITY_INCREMENT = 10;
+    const TANK_UPGRADE_BASE_COST = 150;
+
+    const generateFishId = () => Math.random().toString(36).substr(2, 9);
+
+    const createFish = (species, canvasWidth, canvasHeight, isNewSpawn = false) => ({
+      id: generateFishId(),
+      speciesId: species.id,
+      name: species.name,
+      size: species.size,
+      color: species.color,
+      x: Math.random() * (canvasWidth - 60) + 30,
+      y: Math.random() * (canvasHeight - 60) + 30,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: (Math.random() - 0.5) * 1,
+      direction: Math.random() > 0.5 ? 1 : -1,
+      hunger: 0,
+      lastFed: Date.now(),
+      lastBreed: Date.now(),
+      buyPrice: species.buyPrice,
+      sellPrice: species.sellPrice,
+      rarity: species.rarity,
+      spawnTime: isNewSpawn ? Date.now() : 0,
+      isNewSpawn: isNewSpawn
+    });
+
+    function GalapagosAquarium() {
+      const [money, setMoney] = useState(100);
+      const [currentIsland, setCurrentIsland] = useState(1);
+      const [fish, setFish] = useState([]);
+      const [collectedSpecies, setCollectedSpecies] = useState({ 1: [], 2: [], 3: [], 4: [], 5: [] });
+      const [tankCapacity, setTankCapacity] = useState(BASE_TANK_CAPACITY);
+      const [tankUpgrades, setTankUpgrades] = useState(0);
+      const [canUpgradeTank, setCanUpgradeTank] = useState(false);
+      
+      const [showShop, setShowShop] = useState(false);
+      const [showSell, setShowSell] = useState(false);
+      const [showTravel, setShowTravel] = useState(false);
+      const [showVictory, setShowVictory] = useState(false);
+      const [notifications, setNotifications] = useState([]);
+      const [canvasSize, setCanvasSize] = useState({ width: 400, height: 300 });
+      
+      const canvasRef = useRef(null);
+      const containerRef = useRef(null);
+      const animationRef = useRef(null);
+      const fishRef = useRef(fish);
+      
+      useEffect(() => { fishRef.current = fish; }, [fish]);
+
+      // Responsive canvas sizing
+      useEffect(() => {
+        const updateSize = () => {
+          if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            setCanvasSize({ width: rect.width, height: rect.height });
+          }
+        };
+        updateSize();
+        window.addEventListener('resize', updateSize);
+        window.addEventListener('orientationchange', () => setTimeout(updateSize, 100));
+        return () => {
+          window.removeEventListener('resize', updateSize);
+          window.removeEventListener('orientationchange', updateSize);
+        };
+      }, []);
+      
+      const addNotification = useCallback((message, type = 'info') => {
+        const id = Date.now();
+        setNotifications(prev => [...prev, { id, message, type }]);
+        setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 2500);
+      }, []);
+
+      const trackSpecies = useCallback((speciesId) => {
+        setCollectedSpecies(prev => {
+          if (!prev[currentIsland].includes(speciesId)) {
+            const newCollected = { ...prev, [currentIsland]: [...prev[currentIsland], speciesId] };
+            const count = newCollected[currentIsland].length;
+            if (count === 5 && currentIsland < 5) {
+              addNotification(`🎉 Island ${currentIsland + 1} unlocked!`, 'success');
+            }
+            return newCollected;
+          }
+          return prev;
+        });
+      }, [currentIsland, addNotification]);
+
+      const buyFish = useCallback((species) => {
+        if (money < species.buyPrice) { addNotification('Not enough money!', 'error'); return; }
+        if (fish.length >= tankCapacity) { addNotification('Tank is full!', 'error'); return; }
+        const newFish = createFish(species, canvasSize.width, canvasSize.height, false);
+        setMoney(prev => prev - species.buyPrice);
+        setFish(prev => [...prev, newFish]);
+        trackSpecies(species.id);
+        addNotification(`Bought ${species.name}!`, 'success');
+      }, [money, fish.length, tankCapacity, trackSpecies, addNotification, canvasSize]);
+
+      const sellFish = useCallback((speciesId, quantity) => {
+        const fishToSell = fish.filter(f => f.speciesId === speciesId).slice(0, quantity);
+        if (fishToSell.length === 0) return;
+        const species = FISH_SPECIES[currentIsland].find(s => s.id === speciesId);
+        const totalValue = fishToSell.length * species.sellPrice;
+        setMoney(prev => prev + totalValue);
+        setFish(prev => {
+          let remaining = quantity;
+          return prev.filter(f => {
+            if (f.speciesId === speciesId && remaining > 0) { remaining--; return false; }
+            return true;
+          });
+        });
+        addNotification(`Sold for $${totalValue}!`, 'success');
+      }, [fish, currentIsland, addNotification]);
+
+      const upgradeTank = useCallback(() => {
+        const cost = TANK_UPGRADE_BASE_COST + (tankUpgrades * 100);
+        if (money < cost) { addNotification('Not enough money!', 'error'); return; }
+        if (!canUpgradeTank) { addNotification('Unlock more islands first!', 'error'); return; }
+        setMoney(prev => prev - cost);
+        setTankCapacity(prev => prev + CAPACITY_INCREMENT);
+        setTankUpgrades(prev => prev + 1);
+        addNotification(`Tank upgraded!`, 'success');
+      }, [money, tankUpgrades, canUpgradeTank, addNotification]);
+
+      const travelToIsland = useCallback((islandId) => {
+        const island = ISLANDS[islandId - 1];
+        const prevIslandCollected = islandId === 1 ? 5 : (collectedSpecies[islandId - 1]?.length || 0);
+        if (islandId > 1 && prevIslandCollected < 5) {
+          addNotification(`Collect 5 species first!`, 'error');
+          return;
+        }
+        setCurrentIsland(islandId);
+        setFish([]);
+        setCanUpgradeTank(islandId > 1);
+        setShowTravel(false);
+        addNotification(`Welcome to ${island.name}!`, 'success');
+        if (islandId === 5 && collectedSpecies[5]?.length >= 5) setShowVictory(true);
+      }, [collectedSpecies, addNotification]);
+
+      useEffect(() => {
+        if (currentIsland === 5 && collectedSpecies[5]?.length >= 5) setShowVictory(true);
+      }, [collectedSpecies, currentIsland]);
+
+      // Game loop
+      useEffect(() => {
+        const gameLoop = setInterval(() => {
+          setFish(prevFish => {
+            const now = Date.now();
+            let updatedFish = [...prevFish];
+            
+            updatedFish = updatedFish.map(f => {
+              if (f.size === 1) return { ...f, hunger: 0 };
+              const timeSinceFed = now - f.lastFed;
+              const newHunger = Math.min(100, (timeSinceFed / HUNGER_INTERVAL) * 50);
+              return { ...f, hunger: newHunger };
+            });
+            
+            updatedFish = updatedFish.map(f => {
+              if (f.isNewSpawn && now - f.spawnTime > 2000) return { ...f, isNewSpawn: false };
+              return f;
+            });
+            
+            const toRemove = new Set();
+            updatedFish.forEach(predator => {
+              if (predator.hunger > 30 && !toRemove.has(predator.id)) {
+                const prey = updatedFish.find(p => 
+                  p.id !== predator.id && p.size < predator.size && !toRemove.has(p.id) &&
+                  Math.abs(p.x - predator.x) < 40 && Math.abs(p.y - predator.y) < 25
+                );
+                if (prey) { toRemove.add(prey.id); predator.hunger = 0; predator.lastFed = now; }
+              }
+            });
+            
+            updatedFish = updatedFish.filter(f => !toRemove.has(f.id));
+            
+            const newFish = [];
+            const speciesCounts = {};
+            const speciesLastBreed = {};
+            
+            updatedFish.forEach(f => {
+              speciesCounts[f.speciesId] = (speciesCounts[f.speciesId] || 0) + 1;
+              if (!speciesLastBreed[f.speciesId] || f.lastBreed < speciesLastBreed[f.speciesId]) {
+                speciesLastBreed[f.speciesId] = f.lastBreed;
+              }
+            });
+            
+            Object.entries(speciesCounts).forEach(([speciesId, count]) => {
+              if (count >= 2) {
+                const pairs = Math.floor(count / 2);
+                const lastBreed = speciesLastBreed[speciesId];
+                if (now - lastBreed > BREED_INTERVAL) {
+                  const species = FISH_SPECIES[currentIsland].find(s => s.id === speciesId);
+                  if (species) {
+                    const availableSpace = tankCapacity - (updatedFish.length + newFish.length);
+                    const fishToSpawn = Math.min(pairs, availableSpace);
+                    for (let i = 0; i < fishToSpawn; i++) {
+                      newFish.push(createFish(species, canvasSize.width, canvasSize.height, true));
+                    }
+                    updatedFish = updatedFish.map(f => f.speciesId === speciesId ? { ...f, lastBreed: now } : f);
+                  }
+                }
+              }
+            });
+            
+            return [...updatedFish, ...newFish];
+          });
+        }, 1000);
+        return () => clearInterval(gameLoop);
+      }, [currentIsland, tankCapacity, canvasSize]);
+
+      // Canvas animation
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        const animate = () => {
+          const currentFish = fishRef.current;
+          const width = canvas.width;
+          const height = canvas.height;
+          ctx.clearRect(0, 0, width, height);
+          
+          const island = ISLANDS[currentIsland - 1];
+          const gradient = ctx.createLinearGradient(0, 0, 0, height);
+          const colors = island.background.match(/#[a-fA-F0-9]{6}/g);
+          if (colors) { gradient.addColorStop(0, colors[0]); gradient.addColorStop(0.5, colors[1]); gradient.addColorStop(1, colors[2]); }
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, width, height);
+          
+          // Bubbles
+          for (let i = 0; i < 10; i++) {
+            const x = (Date.now() / 50 + i * 80) % width;
+            const y = height - ((Date.now() / 30 + i * 40) % height);
+            ctx.beginPath(); ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; ctx.fill();
+          }
+          
+          // Sand
+          ctx.fillStyle = '#c9a959';
+          ctx.beginPath(); ctx.moveTo(0, height);
+          for (let x = 0; x <= width; x += 15) ctx.lineTo(x, height - 15 + Math.sin(x / 25) * 4);
+          ctx.lineTo(width, height); ctx.fill();
+          
+          // Seaweed
+          const seaweedCount = Math.max(3, Math.floor(width / 120));
+          for (let i = 0; i < seaweedCount; i++) {
+            const baseX = 30 + i * (width / seaweedCount);
+            ctx.strokeStyle = '#2d5a3d'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(baseX, height - 15);
+            for (let y = height - 15; y > height - 50 - i * 8; y -= 8) {
+              const sway = Math.sin((Date.now() / 1000) + i + y / 15) * 8;
+              ctx.lineTo(baseX + sway, y);
+            }
+            ctx.stroke();
+          }
+          
+          // Fish
+          currentFish.forEach(f => {
+            f.x += f.vx * f.direction; f.y += f.vy;
+            if (f.x < 20 || f.x > width - 20) { f.direction *= -1; f.vx = (Math.random() * 1.2 + 0.3); }
+            if (f.y < 20 || f.y > height - 35) f.vy *= -1;
+            if (Math.random() < 0.01) f.vy = (Math.random() - 0.5) * 1.2;
+            if (Math.random() < 0.005) f.direction *= -1;
+            
+            const baseSize = Math.min(6 + f.size * 4, 6 + f.size * (width / 150));
+            ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.direction, 1);
+            
+            let spawnScale = 1;
+            if (f.isNewSpawn) {
+              const spawnAge = Date.now() - f.spawnTime;
+              const progress = spawnAge / 2000;
+              spawnScale = 0.3 + (progress * 0.7);
+              const glowIntensity = Math.sin(progress * Math.PI * 4) * 0.5 + 0.5;
+              ctx.shadowColor = '#ffff00'; ctx.shadowBlur = 15 + glowIntensity * 10;
+            }
+            ctx.scale(spawnScale, spawnScale);
+            
+            ctx.fillStyle = f.color; ctx.beginPath();
+            ctx.ellipse(0, 0, baseSize, baseSize * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.beginPath(); ctx.moveTo(-baseSize, 0);
+            ctx.lineTo(-baseSize - baseSize * 0.5, -baseSize * 0.4);
+            ctx.lineTo(-baseSize - baseSize * 0.5, baseSize * 0.4); ctx.closePath(); ctx.fill();
+            
+            ctx.fillStyle = 'white'; ctx.beginPath();
+            ctx.arc(baseSize * 0.4, -baseSize * 0.15, baseSize * 0.2, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'black'; ctx.beginPath();
+            ctx.arc(baseSize * 0.45, -baseSize * 0.15, baseSize * 0.1, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.fillStyle = f.color; ctx.globalAlpha = 0.7; ctx.beginPath();
+            ctx.moveTo(0, -baseSize * 0.5); ctx.lineTo(-baseSize * 0.3, -baseSize);
+            ctx.lineTo(baseSize * 0.3, -baseSize * 0.5); ctx.closePath(); ctx.fill();
+            ctx.globalAlpha = 1; ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+            ctx.restore();
+            
+            if (f.isNewSpawn) {
+              const spawnAge = Date.now() - f.spawnTime;
+              const bounce = Math.sin(spawnAge / 100) * 2;
+              ctx.save(); ctx.font = 'bold 10px Arial'; ctx.fillStyle = '#ffff00'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+              ctx.strokeText('✨NEW', f.x - 14, f.y - baseSize - 8 + bounce);
+              ctx.fillText('✨NEW', f.x - 14, f.y - baseSize - 8 + bounce); ctx.restore();
+            }
+            
+            if (f.hunger > 50 && f.size > 1) {
+              ctx.fillStyle = f.hunger > 80 ? '#ff4444' : '#ffaa00'; ctx.font = '10px Arial';
+              ctx.fillText('🍽️', f.x - 6, f.y - baseSize - 3);
+            }
+          });
+          
+          animationRef.current = requestAnimationFrame(animate);
+        };
+        animate();
+        return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+      }, [currentIsland, canvasSize]);
+
+      const currentSpecies = FISH_SPECIES[currentIsland];
+      const collectedCount = collectedSpecies[currentIsland]?.length || 0;
+      const tankUpgradeCost = TANK_UPGRADE_BASE_COST + (tankUpgrades * 100);
+      const fishCounts = fish.reduce((acc, f) => { acc[f.speciesId] = (acc[f.speciesId] || 0) + 1; return acc; }, {});
+
+      const buttonStyle = {
+        flex: 1,
+        padding: '12px 8px',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        border: 'none',
+        borderRadius: '10px',
+        color: '#fff',
+        fontSize: '13px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '2px',
+        minWidth: 0
+      };
+
+      const modalStyle = {
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.85)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 100,
+        padding: '15px'
+      };
+
+      const modalContentStyle = {
+        background: 'linear-gradient(180deg, #1a2a4a 0%, #0a1628 100%)',
+        padding: '20px',
+        borderRadius: '16px',
+        border: '2px solid #4a6a9a',
+        width: '100%',
+        maxWidth: '400px',
+        maxHeight: '80vh',
+        overflow: 'auto'
+      };
+
+      return (
+        <div style={{ width: '100%', height: '100%', background: '#0a1628', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          
+          {/* Header */}
+          <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg, #1a2a4a 0%, #2a3a5a 50%, #1a2a4a 100%)', borderBottom: '2px solid #3a5a8a' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <h1 style={{ margin: 0, fontSize: '16px', background: 'linear-gradient(90deg, #4ECDC4, #44A08D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 'bold' }}>🏝️ Galápagos Aquarium</h1>
+              <div style={{ padding: '4px 10px', background: 'linear-gradient(135deg, #f5af19 0%, #f12711 100%)', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px' }}>💰 ${money}</div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', fontSize: '11px' }}>
+              <div style={{ padding: '4px 8px', background: '#2a3a5a', borderRadius: '12px', border: '1px solid #4a6a9a' }}>📍 {ISLANDS[currentIsland - 1].name}</div>
+              <div style={{ padding: '4px 8px', background: '#2a3a5a', borderRadius: '12px', border: '1px solid #4a6a9a' }}>🐟 {fish.length}/{tankCapacity}</div>
+              <div style={{ padding: '4px 8px', background: collectedCount >= 5 ? 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' : '#2a3a5a', borderRadius: '12px', border: collectedCount >= 5 ? 'none' : '1px solid #4a6a9a' }}>📖 {collectedCount}/5</div>
+            </div>
+          </div>
+
+          {/* Canvas */}
+          <div ref={containerRef} style={{ flex: 1, position: 'relative', margin: '8px', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
+            <canvas ref={canvasRef} width={canvasSize.width} height={canvasSize.height} style={{ width: '100%', height: '100%', borderRadius: '12px', border: '2px solid #3a5a8a', display: 'block' }} />
+            <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {notifications.map(n => (
+                <div key={n.id} style={{ padding: '8px 12px', background: n.type === 'success' ? 'rgba(46, 204, 113, 0.95)' : n.type === 'error' ? 'rgba(231, 76, 60, 0.95)' : 'rgba(52, 152, 219, 0.95)', borderRadius: '8px', fontSize: '12px', maxWidth: '180px' }}>{n.message}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* Menu Buttons */}
+          <div style={{ padding: '10px', background: 'linear-gradient(90deg, #1a2a4a 0%, #2a3a5a 50%, #1a2a4a 100%)', borderTop: '2px solid #3a5a8a', display: 'flex', gap: '8px' }}>
+            <button onClick={() => setShowShop(true)} style={buttonStyle}>
+              <span style={{ fontSize: '20px' }}>🛒</span>
+              <span>Buy</span>
+            </button>
+            <button onClick={() => setShowSell(true)} style={buttonStyle}>
+              <span style={{ fontSize: '20px' }}>💰</span>
+              <span>Sell</span>
+            </button>
+            <button onClick={upgradeTank} style={{...buttonStyle, background: canUpgradeTank ? 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' : '#3a4a6a'}}>
+              <span style={{ fontSize: '20px' }}>🔧</span>
+              <span>${tankUpgradeCost}</span>
+            </button>
+            <button onClick={() => setShowTravel(true)} style={buttonStyle}>
+              <span style={{ fontSize: '20px' }}>🏝️</span>
+              <span>Travel</span>
+            </button>
+          </div>
+
+          {/* Shop Modal */}
+          {showShop && (
+            <div style={modalStyle} onClick={() => setShowShop(false)}>
+              <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
+                <h2 style={{ margin: '0 0 15px 0', textAlign: 'center', fontSize: '18px' }}>🛒 Fish Shop</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {currentSpecies.map(species => (
+                    <div key={species.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#2a3a5a', borderRadius: '10px', border: collectedSpecies[currentIsland]?.includes(species.id) ? '2px solid #2ecc71' : '1px solid #4a6a9a' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: species.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🐟</div>
+                        <div>
+                          <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{species.name}</div>
+                          <div style={{ fontSize: '10px', color: '#8aa' }}>{'⬤'.repeat(species.size)} {species.rarity}</div>
+                        </div>
+                      </div>
+                      <button onClick={() => buyFish(species)} disabled={money < species.buyPrice || fish.length >= tankCapacity}
+                        style={{ padding: '10px 16px', background: money >= species.buyPrice && fish.length < tankCapacity ? 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' : '#444', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>${species.buyPrice}</button>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => setShowShop(false)} style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#4a6a9a', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '16px' }}>Close</button>
+              </div>
+            </div>
+          )}
+
+          {/* Sell Modal */}
+          {showSell && (
+            <div style={modalStyle} onClick={() => setShowSell(false)}>
+              <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
+                <h2 style={{ margin: '0 0 15px 0', textAlign: 'center', fontSize: '18px' }}>💰 Sell Fish</h2>
+                {Object.keys(fishCounts).length === 0 ? <p style={{ textAlign: 'center', color: '#8aa' }}>No fish to sell!</p> : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {Object.entries(fishCounts).map(([speciesId, count]) => {
+                      const species = currentSpecies.find(s => s.id === speciesId);
+                      if (!species) return null;
+                      return (
+                        <div key={speciesId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#2a3a5a', borderRadius: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: species.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🐟</div>
+                            <div>
+                              <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{species.name}</div>
+                              <div style={{ fontSize: '10px', color: '#8aa' }}>Own: {count} • ${species.sellPrice} ea</div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button onClick={() => sellFish(speciesId, 1)} style={{ padding: '8px 12px', background: 'linear-gradient(135deg, #f5af19 0%, #f12711 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}>Sell 1</button>
+                            {count > 1 && <button onClick={() => sellFish(speciesId, count)} style={{ padding: '8px 12px', background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}>All</button>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <button onClick={() => setShowSell(false)} style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#4a6a9a', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '16px' }}>Close</button>
+              </div>
+            </div>
+          )}
+
+          {/* Travel Modal */}
+          {showTravel && (
+            <div style={modalStyle} onClick={() => setShowTravel(false)}>
+              <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
+                <h2 style={{ margin: '0 0 15px 0', textAlign: 'center', fontSize: '18px' }}>🏝️ Islands</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {ISLANDS.map((island, index) => {
+                    const prevCollected = index === 0 ? 5 : (collectedSpecies[index]?.length || 0);
+                    const isUnlocked = index === 0 || prevCollected >= 5;
+                    const isCurrent = currentIsland === island.id;
+                    return (
+                      <div key={island.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: isCurrent ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#2a3a5a', borderRadius: '10px', opacity: isUnlocked ? 1 : 0.5 }}>
+                        <div>
+                          <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{island.name} {isCurrent && '✓'}</div>
+                          <div style={{ fontSize: '10px', color: '#aaa' }}>{isUnlocked ? `${collectedSpecies[island.id]?.length || 0}/5 Species` : '🔒 Locked'}</div>
+                        </div>
+                        {!isCurrent && isUnlocked && <button onClick={() => travelToIsland(island.id)} style={{ padding: '10px 16px', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>Go</button>}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p style={{ fontSize: '11px', color: '#8aa', textAlign: 'center', marginTop: '12px' }}>⚠️ New island = new aquarium!</p>
+                <button onClick={() => setShowTravel(false)} style={{ width: '100%', marginTop: '12px', padding: '12px', background: '#4a6a9a', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '16px' }}>Close</button>
+              </div>
+            </div>
+          )}
+
+          {/* Victory */}
+          {showVictory && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px' }}>
+              <div style={{ textAlign: 'center', padding: '30px', background: 'linear-gradient(180deg, #1a2a4a 0%, #0a1628 100%)', borderRadius: '20px', border: '3px solid #ffd700', maxWidth: '350px' }}>
+                <div style={{ fontSize: '60px', marginBottom: '15px' }}>🏆</div>
+                <h1 style={{ background: 'linear-gradient(90deg, #ffd700, #ffaa00)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '32px', margin: '0 0 15px 0' }}>VICTORY!</h1>
+                <p style={{ fontSize: '14px', color: '#aaa', marginBottom: '20px' }}>You've collected all fish species!</p>
+                <p style={{ fontSize: '20px', color: '#4ECDC4' }}>Final: ${money}</p>
+                <button onClick={() => setShowVictory(false)} style={{ marginTop: '20px', padding: '12px 30px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '16px', fontWeight: 'bold' }}>Continue</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<GalapagosAquarium />);
+  </script>
+</body>
+</html>
