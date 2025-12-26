@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fishing Game Mobile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #333;
+      touch-action: manipulation;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    
+    // Resize canvas to fit screen
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+    
+    // Game state
+    let score = 0;
+    let state = "ready";
+    let waitTime = 0;
+    let waitTimer = 0;
+    let caughtFish = null;
+    let showFishTimer = 0;
+    
+    // Casting mechanics
+    let isCharging = false;
+    let castPower = 0; // 0-100
+    let castDistance = 0.6; // Stored distance when cast (0.6 = 60% of screen)
+    let powerIncreaseSpeed = 0.8; // Power increase per frame (reaches 100 in ~125 frames = ~2 seconds)
+    let powerDecreaseSpeed = 0.2; // Power decrease per frame (slower than increase)
+    
+    // Character vibration
+    let vibrateTimer = 0;
+    let vibrateOffsetX = 0;
+    let vibrateOffsetY = 0;
+    
+    // Fish data with rarities
+    const rarities = [
+      { name: "Trash", color: "#888888", points: 1, chance: 15 },
+      { name: "Common", color: "#FFD700", points: 5, chance: 40 },
+      { name: "Uncommon", color: "#32CD32", points: 20, chance: 20 },
+      { name: "Rare", color: "#1E90FF", points: 50, chance: 12 },
+      { name: "Legendary", color: "#9932CC", points: 100, chance: 8 },
+      { name: "Mythical", color: "#FF1493", points: 500, chance: 5 }
+    ];
+    
+    const fishTypes = {
+      "Trash": ["Old Boot", "Tin Can", "Seaweed", "Plastic Bag"],
+      "Common": ["Tiny Fish", "Small Fish", "Minnow", "Sardine"],
+      "Uncommon": ["Bass", "Trout", "Salmon", "Catfish"],
+      "Rare": ["Tuna", "Swordfish", "Barracuda", "Eel"],
+      "Legendary": ["Giant Squid", "Marlin", "Shark", "Stingray"],
+      "Mythical": ["Golden Fish", "Sea Dragon", "Megalodon", "Kraken"]
+    };
+    
+    // Pick a random fish based on rarity chances
+    function catchFish() {
+      let roll = Math.random() * 100;
+      let total = 0;
+      
+      for (let rarity of rarities) {
+        total += rarity.chance;
+        if (roll < total) {
+          let fishList = fishTypes[rarity.name];
+          let fishName = fishList[Math.floor(Math.random() * fishList.length)];
+          return {
+            name: fishName,
+            rarity: rarity.name,
+            color: rarity.color,
+            points: rarity.points
+          };
+        }
+      }
+      return { name: "Tiny Fish", rarity: "Common", color: "#FFD700", points: 5 };
+    }
+    
+    // Get color for power bar based on power percentage (green -> yellow -> red)
+    function getPowerBarColor(power) {
+      if (power <= 50) {
+        // Green to Yellow (0-50%)
+        const ratio = power / 50;
+        const r = Math.floor(0 + (255 - 0) * ratio);
+        const g = Math.floor(255 + (255 - 255) * ratio);
+        const b = Math.floor(0 + (0 - 0) * ratio);
+        return `rgb(${r}, ${g}, ${b})`;
+      } else {
+        // Yellow to Red (50-100%)
+        const ratio = (power - 50) / 50;
+        const r = 255;
+        const g = Math.floor(255 + (0 - 255) * ratio);
+        const b = 0;
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+    }
+    
+    // Draw everything
+    function draw() {
+      const W = canvas.width;
+      const H = canvas.height;
+      
+      // Scale factor based on screen size
+      const scale = Math.min(W / 800, H / 500);
+      
+      // Sky (blue background)
+      ctx.fillStyle = "#87CEEB";
+      ctx.fillRect(0, 0, W, H);
+      
+      // Calculate positions based on screen size
+      const waterY = H * 0.7;
+      const sandWidth = W * 0.4;
+      
+      // Sand (yellow/tan)
+      ctx.fillStyle = "#F4D03F";
+      ctx.fillRect(0, waterY, sandWidth, H - waterY);
+      
+      // Water (darker blue)
+      ctx.fillStyle = "#1E90FF";
+      ctx.fillRect(sandWidth, waterY, W - sandWidth, H - waterY);
+      
+      // Waves on top of water
+      ctx.fillStyle = "#87CEFA";
+      const waveSize = 12 * scale;
+      for (let x = sandWidth; x < W; x += 40 * scale) {
+        ctx.beginPath();
+        ctx.arc(x + 20 * scale, waterY, waveSize, Math.PI, 0, false);
+        ctx.fill();
+      }
+      
+      // Character position (with vibration offset)
+      const charX = sandWidth * 0.6 + vibrateOffsetX * scale;
+      const charY = waterY + vibrateOffsetY * scale;
+      const charScale = scale * 1.2;
+      
+      // Character body
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(charX, charY, 30 * charScale, 50 * charScale);
+      
+      // Character head
+      ctx.fillStyle = "#FFDAB9";
+      ctx.beginPath();
+      ctx.arc(charX + 15 * charScale, charY - 15 * charScale, 20 * charScale, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Fishing rod
+      const rodEndX = sandWidth + 30 * scale;
+      const rodEndY = waterY - 70 * scale;
+      ctx.strokeStyle = "#8B4513";
+      ctx.lineWidth = 4 * scale;
+      ctx.beginPath();
+      ctx.moveTo(charX + 30 * charScale, charY);
+      ctx.lineTo(rodEndX, rodEndY);
+      ctx.stroke();
+      
+      // Fishing line position (dynamic based on cast power)
+      const lineEndX = W * castDistance;
+      const lineEndY = waterY + 50 * scale;
+      
+      // Fishing line (when cast)
+      if (state === "waiting" || state === "hooked") {
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(rodEndX, rodEndY);
+        ctx.lineTo(lineEndX, lineEndY);
+        ctx.stroke();
+        
+        // Bobber
+        ctx.fillStyle = "#FF0000";
+        ctx.beginPath();
+        ctx.arc(lineEndX, lineEndY, 8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Power bar (only visible when charging)
+      if (isCharging) {
+        const barWidth = 30 * scale;
+        const barHeight = 200 * scale;
+        const barX = charX + 40 * charScale;
+        const barY = charY - 150 * charScale;
+        
+        // Bar background (empty)
+        ctx.fillStyle = "#333333";
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2 * scale;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
+        
+        // Filled portion based on power
+        const fillHeight = (castPower / 100) * barHeight;
+        const fillY = barY + barHeight - fillHeight;
+        
+        // Gradient fill
+        const gradient = ctx.createLinearGradient(barX, fillY, barX, barY + barHeight);
+        const powerColor = getPowerBarColor(castPower);
+        gradient.addColorStop(0, "#00FF00"); // Green at bottom
+        gradient.addColorStop(0.5, "#FFFF00"); // Yellow in middle
+        gradient.addColorStop(1, "#FF0000"); // Red at top
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(barX, fillY, barWidth, fillHeight);
+        
+        // Border around filled portion
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 1 * scale;
+        if (fillHeight > 0) {
+          ctx.strokeRect(barX, fillY, barWidth, fillHeight);
+        }
+      }
+      
+      // HOOKED sign
+      if (state === "hooked") {
+        const signW = 150 * scale;
+        const signH = 60 * scale;
+        const signX = lineEndX - signW / 2;
+        const signY = waterY - 100 * scale;
+        
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(signX, signY, signW, signH);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 3 * scale;
+        ctx.strokeRect(signX, signY, signW, signH);
+        ctx.fillStyle = "#FF0000";
+        ctx.font = `bold ${28 * scale}px Arial`;
+        ctx.textAlign = "center";
+        ctx.fillText("HOOKED!", lineEndX, signY + signH * 0.7);
+      }
+      
+      // Show caught fish
+      if (state === "caught" && caughtFish) {
+        const boxW = 250 * scale;
+        const boxH = 150 * scale;
+        const boxX = W / 2 - boxW / 2;
+        const boxY = H / 2 - boxH / 2;
+        
+        // Background box
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeStyle = caughtFish.color;
+        ctx.lineWidth = 6 * scale;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+        
+        // Fish name
+        ctx.fillStyle = caughtFish.color;
+        ctx.font = `bold ${24 * scale}px Arial`;
+        ctx.textAlign = "center";
+        ctx.fillText(caughtFish.name, W / 2, boxY + 45 * scale);
+        
+        // Rarity
+        ctx.font = `${20 * scale}px Arial`;
+        ctx.fillText(caughtFish.rarity, W / 2, boxY + 80 * scale);
+        
+        // Points
+        ctx.fillStyle = "#000000";
+        ctx.font = `${22 * scale}px Arial`;
+        ctx.fillText("+" + caughtFish.points + " points!", W / 2, boxY + 120 * scale);
+      }
+      
+      // Score
+      ctx.fillStyle = "#000000";
+      ctx.font = `bold ${28 * scale}px Arial`;
+      ctx.textAlign = "left";
+      ctx.fillText("Score: " + score, 20 * scale, 40 * scale);
+      
+      // Instructions
+      ctx.font = `${22 * scale}px Arial`;
+      if (state === "ready") {
+        if (isCharging) {
+          ctx.fillText("Hold to charge... Release to cast!", 20 * scale, 75 * scale);
+        } else {
+          ctx.fillText("Hold to cast!", 20 * scale, 75 * scale);
+        }
+      } else if (state === "waiting") {
+        ctx.fillText("Waiting for a fish...", 20 * scale, 75 * scale);
+      } else if (state === "hooked") {
+        ctx.fillText("Tap to catch!", 20 * scale, 75 * scale);
+      }
+    }
+    
+    // Game loop
+    function update() {
+      // Handle charging state
+      if (isCharging && state === "ready") {
+        if (castPower >= 100) {
+          // Once at 100%, start decreasing if still holding
+          castPower = Math.max(0, castPower - powerDecreaseSpeed);
+        } else {
+          // Increase power while charging (until 100%)
+          castPower = Math.min(100, castPower + powerIncreaseSpeed);
+        }
+      }
+      
+      // Handle vibration
+      if (vibrateTimer > 0) {
+        vibrateTimer--;
+        // Random shake offset (scale will be applied in draw function)
+        vibrateOffsetX = (Math.random() - 0.5) * 8;
+        vibrateOffsetY = (Math.random() - 0.5) * 8;
+        if (vibrateTimer === 0) {
+          vibrateOffsetX = 0;
+          vibrateOffsetY = 0;
+        }
+      }
+      
+      if (state === "waiting") {
+        waitTimer++;
+        if (waitTimer >= waitTime) {
+          state = "hooked";
+        }
+      }
+      
+      if (state === "caught") {
+        showFishTimer++;
+        if (showFishTimer >= 180) { // About 3 seconds at 60fps
+          state = "ready";
+          caughtFish = null;
+          showFishTimer = 0;
+        }
+      }
+      
+      draw();
+      requestAnimationFrame(update);
+    }
+    
+    // Start charging (hold down)
+    function startCharging(e) {
+      if (e) e.preventDefault();
+      if (state === "ready") {
+        isCharging = true;
+        castPower = 0;
+      }
+    }
+    
+    // Release and cast (or catch fish)
+    function releaseCast(e) {
+      if (e) e.preventDefault();
+      
+      if (state === "hooked") {
+        // Catch the fish
+        caughtFish = catchFish();
+        score += caughtFish.points;
+        state = "caught";
+        showFishTimer = 0;
+      } else if (isCharging && state === "ready") {
+        // Calculate distance based on power (linear: 0.3 to 0.9 of screen width)
+        // 0% power = 0.3 (30%), 100% power = 0.9 (90%)
+        const minDistance = 0.3;
+        const maxDistance = 0.9;
+        castDistance = minDistance + (castPower / 100) * (maxDistance - minDistance);
+        
+        // Start vibration
+        vibrateTimer = 30; // 0.5 seconds at 60fps
+        vibrateOffsetX = 0;
+        vibrateOffsetY = 0;
+        
+        // Cast the line
+        isCharging = false;
+        castPower = 0;
+        state = "waiting";
+        waitTime = 300; // 5 seconds at 60fps
+        waitTimer = 0;
+      }
+      
+      // Always stop charging when released
+      isCharging = false;
+    }
+    
+    // Mouse events
+    canvas.addEventListener("mousedown", startCharging);
+    canvas.addEventListener("mouseup", releaseCast);
+    canvas.addEventListener("mouseleave", releaseCast); // Release if mouse leaves canvas
+    
+    // Touch events
+    canvas.addEventListener("touchstart", startCharging);
+    canvas.addEventListener("touchend", releaseCast);
+    canvas.addEventListener("touchcancel", releaseCast); // Release if touch is cancelled
+    
+    // Start the game
+    update();
+  </script>
+</body>
+</html>
+
