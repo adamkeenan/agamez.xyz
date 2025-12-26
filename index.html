@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGAMEZ - Epic Games by a Young Dev</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a25;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #b347ff;
+            --accent-pink: #ff2d7a;
+            --accent-green: #39ff14;
+            --text-primary: #ffffff;
+            --text-secondary: #8888aa;
+            --border-color: #2a2a3a;
+            --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.5);
+            --glow-purple: 0 0 20px rgba(179, 71, 255, 0.5);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow-1 {
+            top: -200px;
+            right: -100px;
+            background: var(--accent-purple);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .bg-glow-2 {
+            bottom: -200px;
+            left: -100px;
+            background: var(--accent-cyan);
+            animation: float 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 30px); }
+        }
+
+        /* Minimal Header - just logo */
+        header {
+            position: relative;
+            z-index: 100;
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            letter-spacing: 4px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo::after {
+            content: '.xyz';
+            font-size: 1rem;
+            color: var(--accent-pink);
+            -webkit-text-fill-color: var(--accent-pink);
+            position: absolute;
+            bottom: 8px;
+        }
+
+        /* Main content */
+        main {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem 2rem;
+        }
+
+        /* Games grid - simple tiles */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            aspect-ratio: 1;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .game-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .game-title-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.8rem;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .new-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--accent-pink);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            z-index: 2;
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            z-index: 3;
+        }
+
+        .game-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-btn {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(0.8);
+            transition: transform 0.25s ease;
+        }
+
+        .game-card:hover .play-btn {
+            transform: scale(1);
+        }
+
+        .play-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+            margin-left: 3px;
+        }
+
+        /* Coming Soon tile */
+        .coming-soon-card {
+            background: var(--bg-card);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            color: var(--text-secondary);
+            transition: all 0.25s ease;
+        }
+
+        .coming-soon-card:hover {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .coming-soon-card svg {
+            width: 40px;
+            height: 40px;
+            opacity: 0.6;
+        }
+
+        .coming-soon-card span {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+            padding: 0 1rem;
+        }
+
+        /* Footer section - contains all the extra info */
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-categories {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .category-tag {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-tag:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .footer-stats {
+            display: flex;
+            gap: 3rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .footer-bottom {
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-bottom h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-tagline {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-credit {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .footer-bottom .heart {
+            color: var(--accent-pink);
+            -webkit-text-fill-color: var(--accent-pink);
+        }
+
+        /* Game page styles */
+        .game-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 1000;
+        }
+
+        .game-page.active {
+            display: block;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.95);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.7rem 1.2rem;
+            border-radius: 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .game-frame-container {
+            width: 100%;
+            height: calc(100vh - 70px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .game-frame {
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            background: #000;
+        }
+
+        .game-header-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2rem;
+            }
+
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 0.8rem;
+            }
+
+            .footer-top {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-info p {
+                max-width: 100%;
+            }
+
+            .footer-stats {
+                justify-content: center;
+            }
+
+            .footer-categories {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <header>
+        <div class="header-content">
+            <a href="#" class="logo" onclick="showHome()">AGAMEZ</a>
+        </div>
+    </header>
+
+    <main id="mainContent">
+        <div class="games-grid" id="gamesGrid">
+            <!-- Games will be dynamically loaded here -->
+        </div>
+    </main>
+
+    <div class="game-page" id="gamePage">
+        <div class="game-header">
+            <button class="back-btn" onclick="closeGame()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back
+            </button>
+            <span class="game-header-logo">AGAMEZ</span>
+            <div style="width: 100px;"></div>
+        </div>
+        <div class="game-frame-container">
+            <iframe id="gameFrame" class="game-frame" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-categories">
+                <span class="category-tag" onclick="filterGames('action')">⚔️ Action</span>
+                <span class="category-tag" onclick="filterGames('puzzle')">🧩 Puzzle</span>
+                <span class="category-tag" onclick="filterGames('arcade')">👾 Arcade</span>
+                <span class="category-tag" onclick="filterGames('adventure')">🗺️ Adventure</span>
+            </div>
+            <div class="footer-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalGames">0</div>
+                    <div class="stat-label">Games</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalPlays">0</div>
+                    <div class="stat-label">Plays</div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <h3>AGAMEZ.XYZ</h3>
+                <p class="footer-tagline">Epic games created by a 10 year old developer using AI and imagination. Play free, have fun!</p>
+                <p class="footer-credit">Made with <span class="heart">♥</span> by a young game developer</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Game data - ADD YOUR GAMES HERE!
+        // Each game needs: id, title, category, thumbnail, plays, isNew, path
+        const games = [
+            // Sample game to show how it works - feel free to remove or keep!
+            {
+                id: 'space-dodge',
+                title: 'Space Dodge',
+                category: 'arcade',
+                thumbnail: 'games/space-dodge/thumbnail.svg',
+                plays: 0,
+                isNew: true,
+                path: 'games/space-dodge/index.html'
+            },
+            // Add more games like this:
+            // {
+            //     id: 'my-game',
+            //     title: 'My Cool Game',
+            //     category: 'action',  // options: action, puzzle, arcade, adventure
+            //     thumbnail: 'games/my-game/thumbnail.png',
+            //     plays: 0,
+            //     isNew: true,
+            //     path: 'games/my-game/index.html'
+            // },
+        ];
+
+        // Render games as simple tiles
+        function renderGames(gamesToRender) {
+            const grid = document.getElementById('gamesGrid');
+            
+            let html = gamesToRender.map(game => `
+                <div class="game-card" onclick="playGame('${game.id}')">
+                    ${game.isNew ? '<span class="new-badge">NEW</span>' : ''}
+                    <div class="play-overlay">
+                        <div class="play-btn">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                    <img src="${game.thumbnail}" alt="${game.title}" class="game-thumbnail" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%2312121a%22 width=%22200%22 height=%22200%22/><text x=%22100%22 y=%22100%22 text-anchor=%22middle%22 fill=%22%238888aa%22 font-size=%2240%22>🎮</text></svg>'">
+                    <div class="game-title-overlay">${game.title}</div>
+                </div>
+            `).join('');
+
+            // Add "More Games Coming" tile
+            html += `
+                <div class="coming-soon-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    <span>MORE GAMES<br>COMING SOON</span>
+                </div>
+            `;
+
+            grid.innerHTML = html;
+        }
+
+        // Filter games by category
+        function filterGames(category) {
+            const filtered = category === 'all' 
+                ? games 
+                : games.filter(g => g.category === category);
+            renderGames(filtered);
+        }
+
+        // Play game
+        function playGame(gameId) {
+            const game = games.find(g => g.id === gameId);
+            if (game) {
+                document.getElementById('gameFrame').src = game.path;
+                document.getElementById('gamePage').classList.add('active');
+                document.body.style.overflow = 'hidden';
+                game.plays++;
+            }
+        }
+
+        // Close game
+        function closeGame() {
+            document.getElementById('gamePage').classList.remove('active');
+            document.getElementById('gameFrame').src = '';
+            document.body.style.overflow = 'auto';
+            renderGames(games);
+            updateStats();
+        }
+
+        // Show home
+        function showHome() {
+            closeGame();
+            renderGames(games);
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('totalGames').textContent = games.length;
+            document.getElementById('totalPlays').textContent = games.reduce((sum, g) => sum + g.plays, 0);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGames(games);
+            updateStats();
+        });
+
+        // ESC to close game
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeGame();
+        });
+    </script>
+</body>
+</html>
