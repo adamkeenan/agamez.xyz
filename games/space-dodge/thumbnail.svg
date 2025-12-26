@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#1a1a2f"/>
+    </linearGradient>
+    <linearGradient id="ship" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00f0ff"/>
+      <stop offset="100%" style="stop-color:#00a0ff"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect fill="url(#bg)" width="300" height="200"/>
+  
+  <!-- Stars -->
+  <circle cx="30" cy="30" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="80" cy="50" r="1" fill="white" opacity="0.6"/>
+  <circle cx="150" cy="20" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="200" cy="60" r="1" fill="white" opacity="0.5"/>
+  <circle cx="250" cy="30" r="2" fill="white" opacity="0.7"/>
+  <circle cx="270" cy="80" r="1" fill="white" opacity="0.6"/>
+  <circle cx="40" cy="100" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="120" cy="140" r="1" fill="white" opacity="0.5"/>
+  <circle cx="220" cy="150" r="1.5" fill="white" opacity="0.7"/>
+  
+  <!-- Asteroids -->
+  <ellipse cx="60" cy="60" rx="20" ry="18" fill="#4a4a5a" stroke="#6a6a7a" stroke-width="2"/>
+  <ellipse cx="220" cy="45" rx="15" ry="14" fill="#4a4a5a" stroke="#6a6a7a" stroke-width="2"/>
+  <ellipse cx="180" cy="100" rx="25" ry="22" fill="#4a4a5a" stroke="#6a6a7a" stroke-width="2"/>
+  
+  <!-- Spaceship -->
+  <g transform="translate(150, 140)">
+    <!-- Engine flame -->
+    <polygon points="0,25 -8,45 8,45" fill="#ff2d7a"/>
+    <!-- Ship body -->
+    <polygon points="0,-20 -20,20 20,20" fill="url(#ship)"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="150" y="185" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#00f0ff">SPACE DODGE</text>
+</svg>

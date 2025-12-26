@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Dodge - AGAMEZ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+        }
+
+        canvas {
+            border: 2px solid #00f0ff;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+
+        .overlay.hidden {
+            display: none;
+        }
+
+        .overlay h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #00f0ff, #b347ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .overlay p {
+            color: #8888aa;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #00f0ff, #b347ff);
+            border: none;
+            color: white;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+        }
+
+        .score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00f0ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: #00f0ff;
+            margin: 1rem 0;
+        }
+
+        .controls-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        <div class="score-display hidden" id="scoreDisplay">Score: 0</div>
+        
+        <div class="overlay" id="startScreen">
+            <h1>🚀 SPACE DODGE</h1>
+            <p>Dodge the asteroids as long as you can!</p>
+            <button class="play-btn" onclick="startGame()">START GAME</button>
+            <div class="controls-info">Use ← → arrow keys or A/D to move</div>
+        </div>
+
+        <div class="overlay hidden" id="gameOverScreen">
+            <h1>GAME OVER</h1>
+            <p>Your Score:</p>
+            <div class="final-score" id="finalScore">0</div>
+            <button class="play-btn" onclick="startGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const finalScore = document.getElementById('finalScore');
+
+        let gameRunning = false;
+        let score = 0;
+        let player = { x: 275, y: 350, width: 50, height: 30 };
+        let asteroids = [];
+        let stars = [];
+        let keys = {};
+
+        // Create starfield
+        for (let i = 0; i < 100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2,
+                speed: Math.random() * 2 + 0.5
+            });
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            player.x = 275;
+            asteroids = [];
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            scoreDisplay.classList.remove('hidden');
+            gameLoop();
+        }
+
+        function endGame() {
+            gameRunning = false;
+            scoreDisplay.classList.add('hidden');
+            finalScore.textContent = score;
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        function spawnAsteroid() {
+            if (Math.random() < 0.02 + score * 0.0001) {
+                asteroids.push({
+                    x: Math.random() * (canvas.width - 40),
+                    y: -40,
+                    size: Math.random() * 20 + 20,
+                    speed: Math.random() * 3 + 2 + score * 0.01,
+                    rotation: 0,
+                    rotationSpeed: (Math.random() - 0.5) * 0.1
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.fillStyle = '#ffffff';
+            stars.forEach(star => {
+                ctx.globalAlpha = Math.random() * 0.5 + 0.5;
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+                star.y += star.speed;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+            
+            // Ship body
+            ctx.fillStyle = '#00f0ff';
+            ctx.beginPath();
+            ctx.moveTo(0, -player.height / 2);
+            ctx.lineTo(-player.width / 2, player.height / 2);
+            ctx.lineTo(player.width / 2, player.height / 2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ship glow
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 15;
+            ctx.fill();
+
+            // Engine flame
+            ctx.fillStyle = '#ff2d7a';
+            ctx.shadowColor = '#ff2d7a';
+            ctx.beginPath();
+            ctx.moveTo(-10, player.height / 2);
+            ctx.lineTo(0, player.height / 2 + 15 + Math.random() * 5);
+            ctx.lineTo(10, player.height / 2);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawAsteroid(asteroid) {
+            ctx.save();
+            ctx.translate(asteroid.x + asteroid.size / 2, asteroid.y + asteroid.size / 2);
+            ctx.rotate(asteroid.rotation);
+
+            ctx.fillStyle = '#4a4a5a';
+            ctx.strokeStyle = '#6a6a7a';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            const sides = 7;
+            for (let i = 0; i < sides; i++) {
+                const angle = (i / sides) * Math.PI * 2;
+                const r = asteroid.size / 2 * (0.8 + Math.random() * 0.2);
+                const x = Math.cos(angle) * r;
+                const y = Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function checkCollision(asteroid) {
+            const px = player.x + player.width / 2;
+            const py = player.y + player.height / 2;
+            const ax = asteroid.x + asteroid.size / 2;
+            const ay = asteroid.y + asteroid.size / 2;
+            const dist = Math.sqrt((px - ax) ** 2 + (py - ay) ** 2);
+            return dist < (player.width / 2 + asteroid.size / 2) * 0.7;
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            // Clear
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw stars
+            drawStars();
+
+            // Move player
+            if ((keys['ArrowLeft'] || keys['a'] || keys['A']) && player.x > 0) {
+                player.x -= 6;
+            }
+            if ((keys['ArrowRight'] || keys['d'] || keys['D']) && player.x < canvas.width - player.width) {
+                player.x += 6;
+            }
+
+            // Spawn and update asteroids
+            spawnAsteroid();
+            
+            asteroids = asteroids.filter(asteroid => {
+                asteroid.y += asteroid.speed;
+                asteroid.rotation += asteroid.rotationSpeed;
+                
+                if (checkCollision(asteroid)) {
+                    endGame();
+                    return false;
+                }
+                
+                return asteroid.y < canvas.height + 50;
+            });
+
+            // Draw asteroids
+            asteroids.forEach(drawAsteroid);
+
+            // Draw player
+            drawPlayer();
+
+            // Update score
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Draw initial state
+        ctx.fillStyle = '#0a0a0f';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawStars();
+    </script>
+</body>
+</html>
