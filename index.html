@@ -355,79 +355,6 @@
             -webkit-text-fill-color: var(--accent-pink);
         }
 
-        /* Game page styles */
-        .game-page {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-dark);
-            z-index: 1000;
-        }
-
-        .game-page.active {
-            display: block;
-        }
-
-        .game-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem 2rem;
-            background: rgba(10, 10, 15, 0.95);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .back-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.7rem 1.2rem;
-            border-radius: 10px;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .back-btn:hover {
-            border-color: var(--accent-cyan);
-            color: var(--accent-cyan);
-        }
-
-        .game-frame-container {
-            width: 100%;
-            height: calc(100vh - 70px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .game-frame {
-            width: 100%;
-            max-width: 1200px;
-            height: 100%;
-            border: 2px solid var(--border-color);
-            border-radius: 16px;
-            background: #000;
-        }
-
-        .game-header-logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             .logo {
@@ -475,21 +402,6 @@
         </div>
     </main>
 
-    <div class="game-page" id="gamePage">
-        <div class="game-header">
-            <button class="back-btn" onclick="closeGame()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Back
-            </button>
-            <span class="game-header-logo">AGAMEZ</span>
-            <div style="width: 100px;"></div>
-        </div>
-        <div class="game-frame-container">
-            <iframe id="gameFrame" class="game-frame" frameborder="0"></iframe>
-        </div>
-    </div>
 
     <footer>
         <div class="footer-content">
@@ -599,29 +511,17 @@
             renderGames(filtered);
         }
 
-        // Play game
+        // Play game - navigate directly to the game for fullscreen experience
         function playGame(gameId) {
             const game = games.find(g => g.id === gameId);
             if (game) {
-                document.getElementById('gameFrame').src = game.path;
-                document.getElementById('gamePage').classList.add('active');
-                document.body.style.overflow = 'hidden';
                 game.plays++;
+                window.location.href = game.path;
             }
-        }
-
-        // Close game
-        function closeGame() {
-            document.getElementById('gamePage').classList.remove('active');
-            document.getElementById('gameFrame').src = '';
-            document.body.style.overflow = 'auto';
-            renderGames(games);
-            updateStats();
         }
 
         // Show home
         function showHome() {
-            closeGame();
             renderGames(games);
         }
 
@@ -635,11 +535,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderGames(games);
             updateStats();
-        });
-
-        // ESC to close game
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeGame();
         });
     </script>
 </body>
