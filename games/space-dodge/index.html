@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Space Dodge - AGAMEZ</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            touch-action: manipulation;
         }
 
         body {
@@ -17,26 +18,37 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .game-container {
             position: relative;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
         }
 
         canvas {
             border: 2px solid #00f0ff;
             border-radius: 8px;
             box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+            max-width: 100%;
+            touch-action: none;
         }
 
         .overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
             background: rgba(10, 10, 15, 0.9);
             display: flex;
             flex-direction: column;
@@ -45,6 +57,7 @@
             border-radius: 8px;
             color: white;
             text-align: center;
+            padding: 20px;
         }
 
         .overlay.hidden {
@@ -52,17 +65,18 @@
         }
 
         .overlay h1 {
-            font-size: 2.5rem;
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
             margin-bottom: 1rem;
             background: linear-gradient(135deg, #00f0ff, #b347ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .overlay p {
             color: #8888aa;
             margin-bottom: 1.5rem;
-            font-size: 1.1rem;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
         }
 
         .play-btn {
@@ -70,13 +84,14 @@
             border: none;
             color: white;
             padding: 1rem 3rem;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 4vw, 1.2rem);
             border-radius: 30px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .play-btn:hover {
+        .play-btn:hover, .play-btn:active {
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
         }
@@ -86,41 +101,123 @@
             top: 20px;
             left: 20px;
             color: #00f0ff;
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 4vw, 1.5rem);
             font-weight: bold;
             text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            z-index: 10;
         }
 
         .final-score {
-            font-size: 3rem;
+            font-size: clamp(2rem, 8vw, 3rem);
             color: #00f0ff;
             margin: 1rem 0;
         }
 
         .controls-info {
             margin-top: 1rem;
-            font-size: 0.9rem;
+            font-size: clamp(0.75rem, 2.5vw, 0.9rem);
             color: #666;
+            line-height: 1.5;
+        }
+
+        /* Mobile touch control buttons */
+        .mobile-controls {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 15px;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(179, 71, 255, 0.2));
+            border: 2px solid #00f0ff;
+            color: #00f0ff;
+            font-size: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.1s ease;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .control-btn:active, .control-btn.active {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.5), rgba(179, 71, 255, 0.5));
+            transform: scale(0.95);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+        }
+
+        /* Show mobile controls on touch devices */
+        @media (hover: none) and (pointer: coarse) {
+            .mobile-controls {
+                display: flex;
+            }
+        }
+
+        /* Also show for narrow screens */
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+        }
+
+        /* Landscape mode adjustments */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .game-container {
+                flex-direction: row;
+                max-width: none;
+                padding: 5px;
+            }
+            
+            .mobile-controls {
+                flex-direction: column;
+                width: auto;
+                margin-top: 0;
+                margin-left: 15px;
+            }
+            
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
-        <div class="score-display hidden" id="scoreDisplay">Score: 0</div>
-        
-        <div class="overlay" id="startScreen">
-            <h1>🚀 SPACE DODGE</h1>
-            <p>Dodge the asteroids as long as you can!</p>
-            <button class="play-btn" onclick="startGame()">START GAME</button>
-            <div class="controls-info">Use ← → arrow keys or A/D to move</div>
+        <div style="position: relative;">
+            <canvas id="gameCanvas" width="600" height="400"></canvas>
+            <div class="score-display hidden" id="scoreDisplay">Score: 0</div>
+            
+            <div class="overlay" id="startScreen">
+                <h1>🚀 SPACE DODGE</h1>
+                <p>Dodge the asteroids as long as you can!</p>
+                <button class="play-btn" onclick="startGame()">START GAME</button>
+                <div class="controls-info" id="controlsInfo">
+                    <span class="desktop-controls">Use ← → arrow keys or A/D to move</span>
+                    <span class="mobile-controls-text">Drag on screen or use buttons below</span>
+                </div>
+            </div>
+
+            <div class="overlay hidden" id="gameOverScreen">
+                <h1>GAME OVER</h1>
+                <p>Your Score:</p>
+                <div class="final-score" id="finalScore">0</div>
+                <button class="play-btn" onclick="startGame()">PLAY AGAIN</button>
+            </div>
         </div>
 
-        <div class="overlay hidden" id="gameOverScreen">
-            <h1>GAME OVER</h1>
-            <p>Your Score:</p>
-            <div class="final-score" id="finalScore">0</div>
-            <button class="play-btn" onclick="startGame()">PLAY AGAIN</button>
+        <!-- Mobile control buttons -->
+        <div class="mobile-controls" id="mobileControls">
+            <button class="control-btn" id="leftBtn" aria-label="Move Left">◀</button>
+            <button class="control-btn" id="rightBtn" aria-label="Move Right">▶</button>
         </div>
     </div>
 
@@ -131,6 +228,8 @@
         const gameOverScreen = document.getElementById('gameOverScreen');
         const scoreDisplay = document.getElementById('scoreDisplay');
         const finalScore = document.getElementById('finalScore');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
 
         let gameRunning = false;
         let score = 0;
@@ -138,6 +237,62 @@
         let asteroids = [];
         let stars = [];
         let keys = {};
+        
+        // Touch/mobile state
+        let touchStartX = null;
+        let touchCurrentX = null;
+        let isMobile = false;
+        let mobileButtonLeft = false;
+        let mobileButtonRight = false;
+        let canvasScale = 1;
+
+        // Detect mobile device
+        function detectMobile() {
+            isMobile = (('ontouchstart' in window) || 
+                       (navigator.maxTouchPoints > 0) || 
+                       window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
+                       window.innerWidth <= 768);
+            updateControlsText();
+        }
+
+        function updateControlsText() {
+            const desktopText = document.querySelector('.desktop-controls');
+            const mobileText = document.querySelector('.mobile-controls-text');
+            if (desktopText && mobileText) {
+                if (isMobile) {
+                    desktopText.style.display = 'none';
+                    mobileText.style.display = 'block';
+                } else {
+                    desktopText.style.display = 'block';
+                    mobileText.style.display = 'none';
+                }
+            }
+        }
+
+        // Resize canvas for different screen sizes
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const maxWidth = Math.min(600, window.innerWidth - 20);
+            const maxHeight = window.innerHeight - (isMobile ? 150 : 50);
+            
+            // Calculate aspect ratio scaling
+            const aspectRatio = 600 / 400;
+            let newWidth = maxWidth;
+            let newHeight = newWidth / aspectRatio;
+            
+            if (newHeight > maxHeight) {
+                newHeight = maxHeight;
+                newWidth = newHeight * aspectRatio;
+            }
+            
+            canvas.style.width = newWidth + 'px';
+            canvas.style.height = newHeight + 'px';
+            
+            // Track scale for touch coordinate conversion
+            canvasScale = canvas.width / newWidth;
+            
+            detectMobile();
+        }
 
         // Create starfield
         for (let i = 0; i < 100; i++) {
@@ -149,14 +304,112 @@
             });
         }
 
-        // Event listeners
-        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        // Keyboard event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            // Prevent arrow keys from scrolling the page
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
         document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        // Touch event listeners for canvas (drag to move)
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+        canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            if (!gameRunning) return;
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchCurrentX = touch.clientX;
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!gameRunning || touchStartX === null) return;
+            const touch = e.touches[0];
+            touchCurrentX = touch.clientX;
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            touchStartX = null;
+            touchCurrentX = null;
+        }
+
+        // Mobile button controls
+        function setupMobileButtons() {
+            // Left button
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileButtonLeft = true;
+                leftBtn.classList.add('active');
+            }, { passive: false });
+            
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileButtonLeft = false;
+                leftBtn.classList.remove('active');
+            }, { passive: false });
+            
+            leftBtn.addEventListener('mousedown', (e) => {
+                mobileButtonLeft = true;
+                leftBtn.classList.add('active');
+            });
+            
+            leftBtn.addEventListener('mouseup', (e) => {
+                mobileButtonLeft = false;
+                leftBtn.classList.remove('active');
+            });
+            
+            leftBtn.addEventListener('mouseleave', (e) => {
+                mobileButtonLeft = false;
+                leftBtn.classList.remove('active');
+            });
+
+            // Right button
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileButtonRight = true;
+                rightBtn.classList.add('active');
+            }, { passive: false });
+            
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileButtonRight = false;
+                rightBtn.classList.remove('active');
+            }, { passive: false });
+            
+            rightBtn.addEventListener('mousedown', (e) => {
+                mobileButtonRight = true;
+                rightBtn.classList.add('active');
+            });
+            
+            rightBtn.addEventListener('mouseup', (e) => {
+                mobileButtonRight = false;
+                rightBtn.classList.remove('active');
+            });
+            
+            rightBtn.addEventListener('mouseleave', (e) => {
+                mobileButtonRight = false;
+                rightBtn.classList.remove('active');
+            });
+        }
+
+        // Prevent default touch behavior on body (stops scrolling during game)
+        document.body.addEventListener('touchmove', (e) => {
+            if (gameRunning) {
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         function startGame() {
             gameRunning = true;
             score = 0;
-            player.x = 275;
+            player.x = canvas.width / 2 - player.width / 2;
             asteroids = [];
             startScreen.classList.add('hidden');
             gameOverScreen.classList.add('hidden');
@@ -169,6 +422,11 @@
             scoreDisplay.classList.add('hidden');
             finalScore.textContent = score;
             gameOverScreen.classList.remove('hidden');
+            // Reset touch state
+            touchStartX = null;
+            touchCurrentX = null;
+            mobileButtonLeft = false;
+            mobileButtonRight = false;
         }
 
         function spawnAsteroid() {
@@ -264,6 +522,48 @@
             return dist < (player.width / 2 + asteroid.size / 2) * 0.7;
         }
 
+        function updatePlayerPosition() {
+            const moveSpeed = 6;
+            let moveLeft = false;
+            let moveRight = false;
+
+            // Check keyboard input
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+                moveLeft = true;
+            }
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+                moveRight = true;
+            }
+
+            // Check mobile button input
+            if (mobileButtonLeft) {
+                moveLeft = true;
+            }
+            if (mobileButtonRight) {
+                moveRight = true;
+            }
+
+            // Check touch drag input
+            if (touchStartX !== null && touchCurrentX !== null) {
+                const dragThreshold = 10;
+                const dragDelta = touchCurrentX - touchStartX;
+                
+                if (dragDelta < -dragThreshold) {
+                    moveLeft = true;
+                } else if (dragDelta > dragThreshold) {
+                    moveRight = true;
+                }
+            }
+
+            // Apply movement
+            if (moveLeft && player.x > 0) {
+                player.x -= moveSpeed;
+            }
+            if (moveRight && player.x < canvas.width - player.width) {
+                player.x += moveSpeed;
+            }
+        }
+
         function gameLoop() {
             if (!gameRunning) return;
 
@@ -274,13 +574,8 @@
             // Draw stars
             drawStars();
 
-            // Move player
-            if ((keys['ArrowLeft'] || keys['a'] || keys['A']) && player.x > 0) {
-                player.x -= 6;
-            }
-            if ((keys['ArrowRight'] || keys['d'] || keys['D']) && player.x < canvas.width - player.width) {
-                player.x += 6;
-            }
+            // Move player (handles all input types)
+            updatePlayerPosition();
 
             // Spawn and update asteroids
             spawnAsteroid();
@@ -310,10 +605,25 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Draw initial state
-        ctx.fillStyle = '#0a0a0f';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        drawStars();
+        // Initialize
+        function init() {
+            resizeCanvas();
+            setupMobileButtons();
+            
+            // Draw initial state
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawStars();
+        }
+
+        // Handle resize
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100);
+        });
+
+        // Start initialization
+        init();
     </script>
 </body>
 </html>
