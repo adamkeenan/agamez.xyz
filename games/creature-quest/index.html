@@ -1,0 +1,3321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Quest</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            width: 400px;
+            height: 600px;
+            background: #16213e;
+            border-radius: 20px;
+            border: 4px solid #e94560;
+            box-shadow: 0 0 30px rgba(233, 69, 96, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Title Screen */
+        #title-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        #title-screen h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 24px;
+            color: #e94560;
+            text-shadow: 3px 3px 0 #0f3460;
+            margin-bottom: 10px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+        
+        #title-screen h2 {
+            font-size: 28px;
+            color: #eee;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* Character Creation */
+        #character-creation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        #name-input {
+            background: #16213e;
+            border: 3px solid #e94560;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            padding: 10px 20px;
+            text-align: center;
+            width: 200px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        
+        #name-input::placeholder {
+            color: #666;
+        }
+        
+        #name-input:focus {
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
+        }
+        
+        .gender-select {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .gender-btn {
+            width: 120px;
+            height: 180px;
+            background: #16213e;
+            border: 3px solid #333;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-family: 'VT323', monospace;
+            font-size: 20px;
+            color: #fff;
+            padding: 10px;
+        }
+        
+        .gender-btn:hover {
+            transform: translateY(-5px);
+            border-color: #e94560;
+        }
+        
+        .gender-btn.selected {
+            border-color: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+            background: #1f2f4d;
+        }
+        
+        .gender-sprite {
+            font-size: 70px;
+            margin-bottom: 10px;
+        }
+        
+        /* Pixel art trainer */
+        .pixel-trainer {
+            width: 48px;
+            height: 72px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        /* Head */
+        .trainer-head {
+            width: 24px;
+            height: 24px;
+            background: #ffdbac;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 12px;
+        }
+        
+        /* Hair */
+        .trainer-hair {
+            position: absolute;
+            top: -2px;
+            left: 10px;
+            width: 28px;
+            height: 16px;
+            border-radius: 50% 50% 0 0;
+        }
+        
+        .boy-hair {
+            background: #2c1810;
+            height: 14px;
+        }
+        
+        .girl-hair {
+            background: #4a3728;
+            height: 18px;
+            top: -4px;
+        }
+        
+        /* Girl's longer hair sides */
+        .girl-hair::before,
+        .girl-hair::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 28px;
+            background: #4a3728;
+            top: 12px;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .girl-hair::before {
+            left: 0;
+        }
+        
+        .girl-hair::after {
+            right: 0;
+        }
+        
+        /* Hat */
+        .trainer-hat {
+            position: absolute;
+            top: -6px;
+            left: 8px;
+            width: 32px;
+            height: 12px;
+            background: #1a1a1a;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .trainer-hat::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: -2px;
+            width: 36px;
+            height: 6px;
+            background: #333;
+            border-radius: 2px;
+        }
+        
+        .girl-hat {
+            background: #fff;
+        }
+        
+        .girl-hat::after {
+            background: #e94560;
+        }
+        
+        /* Eyes */
+        .trainer-eyes {
+            position: absolute;
+            top: 10px;
+            left: 16px;
+            width: 16px;
+            height: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .trainer-eyes::before,
+        .trainer-eyes::after {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: #2c1810;
+            border-radius: 50%;
+        }
+        
+        /* Body/Jacket */
+        .trainer-body {
+            position: absolute;
+            top: 24px;
+            left: 8px;
+            width: 32px;
+            height: 28px;
+            background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+            border-radius: 4px 4px 0 0;
+        }
+        
+        /* Jacket collar/details */
+        .trainer-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 10px;
+            background: #fff;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        /* Arms */
+        .trainer-arms {
+            position: absolute;
+            top: 26px;
+            left: 2px;
+            width: 44px;
+            height: 20px;
+        }
+        
+        .trainer-arms::before,
+        .trainer-arms::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 20px;
+            background: #22c55e;
+            border-radius: 4px;
+        }
+        
+        .trainer-arms::before {
+            left: 0;
+        }
+        
+        .trainer-arms::after {
+            right: 0;
+        }
+        
+        /* Legs */
+        .trainer-legs {
+            position: absolute;
+            top: 52px;
+            left: 12px;
+            width: 24px;
+            height: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .trainer-legs::before,
+        .trainer-legs::after {
+            content: '';
+            width: 10px;
+            height: 16px;
+            background: #1e3a5f;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        /* Shoes */
+        .trainer-shoes {
+            position: absolute;
+            top: 66px;
+            left: 10px;
+            width: 28px;
+            height: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .trainer-shoes::before,
+        .trainer-shoes::after {
+            content: '';
+            width: 12px;
+            height: 6px;
+            background: #dc2626;
+            border-radius: 2px;
+        }
+        
+        /* Small trainer for map */
+        .pixel-trainer-small {
+            width: 32px;
+            height: 40px;
+            position: relative;
+        }
+        
+        .pixel-trainer-small .trainer-head {
+            width: 16px;
+            height: 16px;
+            top: 0;
+            left: 8px;
+        }
+        
+        .pixel-trainer-small .trainer-hair {
+            width: 18px;
+            height: 10px;
+            top: -2px;
+            left: 7px;
+        }
+        
+        .pixel-trainer-small .trainer-hat {
+            width: 20px;
+            height: 8px;
+            top: -4px;
+            left: 6px;
+        }
+        
+        .pixel-trainer-small .trainer-hat::after {
+            width: 22px;
+            height: 4px;
+            left: -1px;
+            bottom: -3px;
+        }
+        
+        .pixel-trainer-small .trainer-eyes {
+            top: 6px;
+            left: 10px;
+            width: 10px;
+        }
+        
+        .pixel-trainer-small .trainer-eyes::before,
+        .pixel-trainer-small .trainer-eyes::after {
+            width: 3px;
+            height: 3px;
+        }
+        
+        .pixel-trainer-small .trainer-body {
+            top: 16px;
+            left: 6px;
+            width: 20px;
+            height: 16px;
+        }
+        
+        .pixel-trainer-small .trainer-body::before {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .pixel-trainer-small .trainer-arms {
+            top: 17px;
+            left: 2px;
+            width: 28px;
+            height: 12px;
+        }
+        
+        .pixel-trainer-small .trainer-arms::before,
+        .pixel-trainer-small .trainer-arms::after {
+            width: 5px;
+            height: 12px;
+        }
+        
+        .pixel-trainer-small .trainer-legs {
+            top: 32px;
+            left: 8px;
+            width: 16px;
+            height: 8px;
+        }
+        
+        .pixel-trainer-small .trainer-legs::before,
+        .pixel-trainer-small .trainer-legs::after {
+            width: 6px;
+            height: 8px;
+        }
+        
+        .pixel-trainer-small .trainer-shoes {
+            display: none;
+        }
+        
+        #starter-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #starter-section.visible {
+            display: flex;
+        }
+        
+        .starter-select {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .starter-btn {
+            width: 100px;
+            height: 130px;
+            border: 3px solid #333;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+        }
+        
+        .starter-btn:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        
+        .starter-btn.fire {
+            background: linear-gradient(180deg, #ff6b6b, #c0392b);
+            border-color: #e74c3c;
+            color: #fff;
+        }
+        
+        .starter-btn.water {
+            background: linear-gradient(180deg, #74b9ff, #2980b9);
+            border-color: #3498db;
+            color: #fff;
+        }
+        
+        .starter-btn.grass {
+            background: linear-gradient(180deg, #55efc4, #27ae60);
+            border-color: #2ecc71;
+            color: #fff;
+        }
+        
+        .starter-sprite {
+            font-size: 50px;
+            margin-bottom: 5px;
+        }
+        
+        #continue-btn {
+            background: #e94560;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            padding: 12px 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        #continue-btn:hover {
+            background: #ff6b8a;
+            transform: scale(1.05);
+        }
+        
+        #continue-btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Exploration Screen */
+        #explore-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        
+        #game-map {
+            width: 100%;
+            height: 400px;
+            background: #2d5a27;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Area backgrounds */
+        #game-map.meadow {
+            background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 40%, #7ec850 40%, #5a9c3a 100%);
+        }
+        
+        #game-map.forest {
+            background: linear-gradient(180deg, #4a7c59 0%, #2d5a27 50%, #1e3d1a 100%);
+        }
+        
+        #game-map.cave {
+            background: linear-gradient(180deg, #2c3e50 0%, #1a252f 50%, #0d1318 100%);
+        }
+        
+        #game-map.beach {
+            background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 30%, #f4d03f 30%, #c9a227 60%, #3498db 60%, #2980b9 100%);
+        }
+        
+        #game-map.mountain {
+            background: linear-gradient(180deg, #a8d4e6 0%, #d5d5d5 30%, #808080 60%, #5a5a5a 100%);
+        }
+        
+        #game-map.swamp {
+            background: linear-gradient(180deg, #6b7b3a 0%, #4a5a2a 30%, #3d4a24 60%, #2d3a1a 100%);
+        }
+        
+        #game-map.desert {
+            background: linear-gradient(180deg, #f39c12 0%, #e67e22 30%, #d4a056 60%, #c9a227 100%);
+        }
+        
+        #game-map.frozen {
+            background: linear-gradient(180deg, #d4f1f9 0%, #a8d8ea 30%, #cce5ff 60%, #ffffff 100%);
+        }
+        
+        #game-map.volcano {
+            background: linear-gradient(180deg, #c0392b 0%, #8b0000 30%, #4a0000 60%, #2d0000 100%);
+        }
+        
+        #game-map.mystic {
+            background: linear-gradient(180deg, #9b59b6 0%, #8e44ad 30%, #6c3483 60%, #4a235a 100%);
+        }
+        
+        /* Animated background elements */
+        .bg-cloud {
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50px;
+            animation: cloudFloat 20s linear infinite;
+            z-index: 1;
+        }
+        
+        @keyframes cloudFloat {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(500px); }
+        }
+        
+        .bg-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            animation: starTwinkle 1.5s ease-in-out infinite;
+            z-index: 1;
+        }
+        
+        @keyframes starTwinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes flameFlicker {
+            0%, 100% { transform: scaleY(1) scaleX(1); }
+            50% { transform: scaleY(1.1) scaleX(0.9); }
+        }
+        
+        /* Evolution animation overlay */
+        #evolution-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #evolution-text {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #evolution-creature {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .evolving {
+            animation: evolveGlow 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes evolveGlow {
+            0%, 100% { 
+                filter: brightness(1) drop-shadow(0 0 10px #fff);
+                transform: scale(1);
+            }
+            50% { 
+                filter: brightness(2) drop-shadow(0 0 30px #fff);
+                transform: scale(1.1);
+            }
+        }
+        
+        .evolve-flash {
+            animation: evolveFlash 0.8s ease-out;
+        }
+        
+        @keyframes evolveFlash {
+            0% { 
+                filter: brightness(5) drop-shadow(0 0 50px #fff);
+                transform: scale(1.5);
+            }
+            100% { 
+                filter: brightness(1) drop-shadow(0 0 0px #fff);
+                transform: scale(1);
+            }
+        }
+        
+        #evolution-sparkles {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            pointer-events: none;
+        }
+        
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: sparkleFloat 1s ease-out forwards;
+        }
+        
+        @keyframes sparkleFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+        
+        #evolution-continue {
+            margin-top: 30px;
+            background: #e94560;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 22px;
+            padding: 12px 30px;
+            cursor: pointer;
+            display: none;
+        }
+        
+        #evolution-continue:hover {
+            background: #ff6b8a;
+        }
+        
+        /* Pixel art creature sprites */
+        .pixel-creature {
+            width: 64px;
+            height: 64px;
+            position: relative;
+            image-rendering: pixelated;
+        }
+        
+        .creature-body {
+            position: absolute;
+            border-radius: 50%;
+        }
+        
+        .creature-eye {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+        }
+        
+        .creature-eye::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #000;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+        }
+        
+        .creature-detail {
+            position: absolute;
+        }
+        
+        .tile {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .grass {
+            background: #3d7a37;
+        }
+        
+        .tall-grass {
+            background: #2d5a27;
+            position: relative;
+        }
+        
+        .tall-grass::after {
+            content: '🌿';
+            position: absolute;
+            font-size: 24px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: sway 1s ease-in-out infinite;
+        }
+        
+        @keyframes sway {
+            0%, 100% { transform: translate(-50%, -50%) rotate(-5deg); }
+            50% { transform: translate(-50%, -50%) rotate(5deg); }
+        }
+        
+        .path {
+            background: #c9a86c;
+        }
+        
+        .water-tile {
+            background: #3498db;
+            animation: waterShimmer 2s infinite;
+        }
+        
+        @keyframes waterShimmer {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        .tree {
+            background: #2d5a27;
+        }
+        
+        .tree::after {
+            content: '🌲';
+            font-size: 30px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .rock {
+            background: #3d7a37;
+        }
+        
+        .rock::after {
+            content: '🪨';
+            font-size: 24px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        #player {
+            position: absolute;
+            width: 40px;
+            height: 45px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 10;
+            transition: left 0.15s, top 0.15s;
+            overflow: visible;
+        }
+        
+        #area-name {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-size: 20px;
+            z-index: 5;
+        }
+        
+        #bottom-panel {
+            height: 200px;
+            background: #1a1a2e;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #team-display {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .team-creature {
+            width: 50px;
+            height: 50px;
+            background: #16213e;
+            border: 2px solid #333;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .team-creature:hover {
+            border-color: #e94560;
+            transform: scale(1.1);
+        }
+        
+        .team-creature.selected {
+            border-color: #e94560;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+        
+        #controls-hint {
+            color: #888;
+            font-size: 16px;
+            text-align: center;
+            margin-top: auto;
+        }
+        
+        /* Floor items */
+        .floor-item {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            animation: itemBob 1s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            cursor: pointer;
+        }
+        
+        @keyframes itemBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .floor-item-glow {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: glowPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes glowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 0.3; }
+        }
+        
+        /* Item bag button */
+        #bag-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #8b4513;
+            border: 3px solid #5d2e0c;
+            border-radius: 10px;
+            width: 50px;
+            height: 50px;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+            transition: all 0.2s;
+        }
+        
+        #bag-btn:hover {
+            transform: scale(1.1);
+            border-color: #e94560;
+        }
+        
+        /* Item bag overlay */
+        #bag-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        #bag-overlay h2 {
+            color: #e94560;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .bag-item {
+            background: #16213e;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #fff;
+        }
+        
+        .bag-item-sprite {
+            font-size: 32px;
+        }
+        
+        .bag-item-info {
+            flex-grow: 1;
+        }
+        
+        .bag-item-name {
+            font-size: 20px;
+            margin-bottom: 3px;
+        }
+        
+        .bag-item-desc {
+            font-size: 16px;
+            color: #888;
+        }
+        
+        .bag-item-count {
+            font-size: 24px;
+            color: #f1c40f;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .use-item-btn {
+            background: #27ae60;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .use-item-btn:hover:not(:disabled) {
+            background: #2ecc71;
+            transform: scale(1.05);
+        }
+        
+        .use-item-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        
+        #stats-display {
+            color: #fff;
+            font-size: 18px;
+            flex-grow: 1;
+        }
+        
+        .stat-bar {
+            height: 12px;
+            background: #333;
+            border-radius: 6px;
+            margin: 3px 0;
+            overflow: hidden;
+        }
+        
+        .stat-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+        
+        .hp-fill { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        .xp-fill { background: linear-gradient(90deg, #3498db, #2980b9); }
+        
+        /* Battle Screen */
+        #battle-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #87CEEB 0%, #98D8AA 100%);
+            display: none;
+            flex-direction: column;
+            z-index: 50;
+        }
+        
+        #battle-scene {
+            height: 280px;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .battle-creature {
+            position: absolute;
+            text-align: center;
+        }
+        
+        #enemy-creature {
+            top: 20px;
+            right: 30px;
+        }
+        
+        #player-creature {
+            bottom: 20px;
+            left: 30px;
+        }
+        
+        .creature-sprite {
+            font-size: 70px;
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .creature-info {
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+        
+        .creature-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .creature-level {
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .battle-hp-bar {
+            width: 100px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .battle-hp-fill {
+            height: 100%;
+            background: #2ecc71;
+            transition: width 0.3s;
+        }
+        
+        .battle-hp-fill.low {
+            background: #e74c3c;
+        }
+        
+        #turn-order {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 10px;
+            color: #fff;
+        }
+        
+        #turn-order h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #e94560;
+        }
+        
+        .turn-marker {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 16px;
+            padding: 2px 0;
+        }
+        
+        .turn-marker.active {
+            color: #f1c40f;
+        }
+        
+        #battle-menu {
+            flex-grow: 1;
+            background: #1a1a2e;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #battle-message {
+            color: #fff;
+            font-size: 20px;
+            min-height: 50px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #16213e;
+            border-radius: 10px;
+            border: 2px solid #333;
+        }
+        
+        #battle-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            flex-grow: 1;
+        }
+        
+        .battle-btn {
+            background: #16213e;
+            border: 3px solid #333;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .battle-btn:hover:not(:disabled) {
+            border-color: #e94560;
+            transform: scale(1.02);
+        }
+        
+        .battle-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .battle-btn.fight { border-color: #e74c3c; }
+        .battle-btn.catch { border-color: #f1c40f; }
+        .battle-btn.team { border-color: #3498db; }
+        .battle-btn.run { border-color: #95a5a6; }
+        
+        #moves-menu, #team-menu, #bag-menu {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            flex-grow: 1;
+        }
+        
+        .move-btn {
+            background: #16213e;
+            border: 3px solid #333;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .move-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+        }
+        
+        .move-btn.fire-move { border-color: #e74c3c; }
+        .move-btn.water-move { border-color: #3498db; }
+        .move-btn.grass-move { border-color: #2ecc71; }
+        .move-btn.normal-move { border-color: #95a5a6; }
+        
+        .move-power {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .back-btn {
+            grid-column: span 2;
+        }
+        
+        /* Catch Animation */
+        .catch-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: rotate(0); }
+            25% { transform: rotate(-20deg); }
+            75% { transform: rotate(20deg); }
+        }
+        
+        /* Area transition */
+        #area-portal {
+            position: absolute;
+            font-size: 30px;
+            z-index: 5;
+        }
+        
+        /* Caught notification */
+        #notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: #fff;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 24px;
+            z-index: 200;
+            display: none;
+            text-align: center;
+            border: 3px solid #e94560;
+        }
+        
+        /* Mobile controls */
+        #mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 210px;
+            left: 10px;
+            z-index: 20;
+        }
+        
+        .d-pad {
+            display: grid;
+            grid-template-columns: 40px 40px 40px;
+            grid-template-rows: 40px 40px 40px;
+            gap: 2px;
+        }
+        
+        .d-btn {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .d-btn:active {
+            background: rgba(233, 69, 96, 0.5);
+        }
+        
+        .d-up { grid-column: 2; grid-row: 1; }
+        .d-left { grid-column: 1; grid-row: 2; }
+        .d-right { grid-column: 3; grid-row: 2; }
+        .d-down { grid-column: 2; grid-row: 3; }
+        
+        @media (max-width: 500px) {
+            #game-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+            
+            #game-map {
+                height: calc(100vh - 250px);
+            }
+            
+            #bottom-panel {
+                height: 250px;
+            }
+            
+            #mobile-controls {
+                display: block;
+            }
+        }
+        
+        /* Menu overlay */
+        #menu-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        #menu-overlay h2 {
+            color: #e94560;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .menu-creature {
+            background: #16213e;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #fff;
+        }
+        
+        .menu-creature-sprite {
+            font-size: 40px;
+        }
+        
+        .menu-creature-info {
+            flex-grow: 1;
+        }
+        
+        .menu-creature-name {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .menu-creature-stats {
+            font-size: 16px;
+            color: #888;
+        }
+        
+        .close-menu-btn {
+            background: #e94560;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 22px;
+            padding: 15px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        /* Area select */
+        #area-select {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 160;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        #area-select h2 {
+            color: #e94560;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .area-btn {
+            background: #16213e;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 20px;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .area-btn:hover:not(:disabled) {
+            border-color: #e94560;
+        }
+        
+        .area-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .area-btn .area-icon {
+            font-size: 24px;
+        }
+        
+        .area-locked::after {
+            content: '🔒';
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Title Screen -->
+        <div id="title-screen">
+            <h1>CREATURE<br>QUEST</h1>
+            <h2>Create Your Character!</h2>
+            
+            <div id="character-creation">
+                <input type="text" id="name-input" placeholder="Your Name" maxlength="12" oninput="checkCanContinue()">
+                
+                <div class="gender-select">
+                    <button class="gender-btn" id="boy-btn" onclick="selectGender('boy')">
+                        <div class="pixel-trainer">
+                            <div class="trainer-hat"></div>
+                            <div class="trainer-hair boy-hair"></div>
+                            <div class="trainer-head"></div>
+                            <div class="trainer-eyes"></div>
+                            <div class="trainer-body"></div>
+                            <div class="trainer-arms"></div>
+                            <div class="trainer-legs"></div>
+                            <div class="trainer-shoes"></div>
+                        </div>
+                        <span>Boy</span>
+                    </button>
+                    <button class="gender-btn" id="girl-btn" onclick="selectGender('girl')">
+                        <div class="pixel-trainer">
+                            <div class="trainer-hat girl-hat"></div>
+                            <div class="trainer-hair girl-hair"></div>
+                            <div class="trainer-head"></div>
+                            <div class="trainer-eyes"></div>
+                            <div class="trainer-body"></div>
+                            <div class="trainer-arms"></div>
+                            <div class="trainer-legs"></div>
+                            <div class="trainer-shoes"></div>
+                        </div>
+                        <span>Girl</span>
+                    </button>
+                </div>
+                
+                <button id="continue-btn" disabled onclick="showStarterSelect()">Continue →</button>
+            </div>
+            
+            <div id="starter-section">
+                <h2>Choose Your Starter!</h2>
+                <div class="starter-select">
+                    <button class="starter-btn fire" onclick="selectStarter('fire')">
+                        <div id="starter-fire-sprite"></div>
+                        <span>Emberpup</span>
+                    </button>
+                    <button class="starter-btn water" onclick="selectStarter('water')">
+                        <div id="starter-water-sprite"></div>
+                        <span>Bubblefish</span>
+                    </button>
+                    <button class="starter-btn grass" onclick="selectStarter('grass')">
+                        <div id="starter-grass-sprite"></div>
+                        <span>Leafling</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explore Screen -->
+        <div id="explore-screen">
+            <div id="game-map">
+                <div id="area-name">Starter Meadow</div>
+                <div id="player">
+                    <div class="pixel-trainer-small" id="player-sprite">
+                        <div class="trainer-hat"></div>
+                        <div class="trainer-hair boy-hair"></div>
+                        <div class="trainer-head"></div>
+                        <div class="trainer-eyes"></div>
+                        <div class="trainer-body"></div>
+                        <div class="trainer-arms"></div>
+                        <div class="trainer-legs"></div>
+                        <div class="trainer-shoes"></div>
+                    </div>
+                </div>
+                <button id="bag-btn" onclick="toggleBag()">🎒</button>
+                <div id="mobile-controls">
+                    <div class="d-pad">
+                        <button class="d-btn d-up" onclick="movePlayer(0,-1)">↑</button>
+                        <button class="d-btn d-left" onclick="movePlayer(-1,0)">←</button>
+                        <button class="d-btn d-right" onclick="movePlayer(1,0)">→</button>
+                        <button class="d-btn d-down" onclick="movePlayer(0,1)">↓</button>
+                    </div>
+                </div>
+            </div>
+            <div id="bottom-panel">
+                <div id="team-display"></div>
+                <div id="stats-display"></div>
+                <div id="controls-hint">Arrow keys to move | M = Menu | T = Travel | B = Bag</div>
+            </div>
+        </div>
+        
+        <!-- Item Bag Overlay -->
+        <div id="bag-overlay">
+            <h2>🎒 ITEM BAG</h2>
+            <div id="bag-contents"></div>
+            <button class="close-menu-btn" onclick="closeBag()">Close</button>
+        </div>
+        
+        <!-- Battle Screen -->
+        <div id="battle-screen">
+            <div id="battle-scene">
+                <div id="turn-order">
+                    <h3>Turn Order</h3>
+                    <div id="turn-list"></div>
+                </div>
+                <div class="battle-creature" id="enemy-creature">
+                    <div class="creature-sprite" id="enemy-sprite">👾</div>
+                    <div class="creature-info">
+                        <div class="creature-name" id="enemy-name">Wild ???</div>
+                        <div class="creature-level" id="enemy-level">Lv. 1</div>
+                        <div class="battle-hp-bar">
+                            <div class="battle-hp-fill" id="enemy-hp-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="battle-creature" id="player-creature">
+                    <div class="creature-sprite" id="player-sprite">🔥</div>
+                    <div class="creature-info">
+                        <div class="creature-name" id="player-name">Flameling</div>
+                        <div class="creature-level" id="player-level">Lv. 5</div>
+                        <div class="battle-hp-bar">
+                            <div class="battle-hp-fill" id="player-hp-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="battle-menu">
+                <div id="battle-message">A wild creature appeared!</div>
+                <div id="battle-actions">
+                    <button class="battle-btn fight" onclick="showMoves()">⚔️ Fight</button>
+                    <button class="battle-btn" style="border-color: #8b4513;" onclick="showBattleBag()">🎒 Bag</button>
+                    <button class="battle-btn catch" onclick="attemptCatch()">🎯 Catch</button>
+                    <button class="battle-btn run" onclick="runAway()">🏃 Run</button>
+                </div>
+                <div id="moves-menu"></div>
+                <div id="team-menu"></div>
+                <div id="bag-menu"></div>
+            </div>
+        </div>
+        
+        <!-- Notification -->
+        <div id="notification"></div>
+        
+        <!-- Evolution Overlay -->
+        <div id="evolution-overlay">
+            <div id="evolution-text">What? Emberpup is evolving!</div>
+            <div id="evolution-sparkles"></div>
+            <div id="evolution-creature"></div>
+            <button id="evolution-continue" onclick="closeEvolution()">Continue</button>
+        </div>
+        
+        <!-- Menu Overlay -->
+        <div id="menu-overlay">
+            <h2>YOUR TEAM</h2>
+            <div id="menu-creatures"></div>
+            <button class="close-menu-btn" onclick="closeMenu()">Close</button>
+        </div>
+        
+        <!-- Area Select -->
+        <div id="area-select">
+            <h2>TRAVEL TO...</h2>
+            <div id="area-list"></div>
+            <button class="close-menu-btn" onclick="closeAreaSelect()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // ============ CREATURE DATA ============
+        const creatureData = {
+            // Starters
+            emberpup: {
+                name: 'Emberpup',
+                type: 'fire',
+                baseHp: 45,
+                baseAtk: 52,
+                baseDef: 43,
+                baseSpd: 65,
+                moves: ['Ember', 'Scratch'],
+                evolvesTo: 'blazehound',
+                evolveLevel: 10,
+                colors: ['#ff6b35', '#ff4444', '#ffaa00']
+            },
+            blazehound: {
+                name: 'Blazehound',
+                type: 'fire',
+                baseHp: 65,
+                baseAtk: 76,
+                baseDef: 58,
+                baseSpd: 85,
+                moves: ['Flamethrower', 'Ember', 'Quick Attack', 'Scratch'],
+                colors: ['#ff4444', '#ff0000', '#ffcc00']
+            },
+            bubblefish: {
+                name: 'Bubblefish',
+                type: 'water',
+                baseHp: 50,
+                baseAtk: 46,
+                baseDef: 50,
+                baseSpd: 58,
+                moves: ['Bubble', 'Tackle'],
+                evolvesTo: 'tidalfin',
+                evolveLevel: 10,
+                colors: ['#74b9ff', '#0984e3', '#00cec9']
+            },
+            tidalfin: {
+                name: 'Tidalfin',
+                type: 'water',
+                baseHp: 79,
+                baseAtk: 63,
+                baseDef: 80,
+                baseSpd: 58,
+                moves: ['Hydro Pump', 'Bubble', 'Bite', 'Tackle'],
+                colors: ['#0984e3', '#0652DD', '#00d2d3']
+            },
+            leafling: {
+                name: 'Leafling',
+                type: 'grass',
+                baseHp: 49,
+                baseAtk: 49,
+                baseDef: 49,
+                baseSpd: 60,
+                moves: ['Vine Whip', 'Tackle'],
+                evolvesTo: 'floradon',
+                evolveLevel: 10,
+                colors: ['#55efc4', '#00b894', '#26de81']
+            },
+            floradon: {
+                name: 'Floradon',
+                type: 'grass',
+                baseHp: 80,
+                baseAtk: 67,
+                baseDef: 63,
+                baseSpd: 70,
+                moves: ['Solar Beam', 'Vine Whip', 'Razor Leaf', 'Tackle'],
+                colors: ['#00b894', '#009432', '#A3CB38']
+            },
+            // Wild creatures
+            squeakrat: {
+                name: 'Squeakrat',
+                type: 'normal',
+                baseHp: 30,
+                baseAtk: 40,
+                baseDef: 30,
+                baseSpd: 55,
+                moves: ['Tackle', 'Bite'],
+                colors: ['#b8860b', '#8B7355', '#DEB887']
+            },
+            fluffowl: {
+                name: 'Fluffowl',
+                type: 'normal',
+                baseHp: 35,
+                baseAtk: 35,
+                baseDef: 35,
+                baseSpd: 70,
+                moves: ['Peck', 'Quick Attack'],
+                colors: ['#dfe6e9', '#636e72', '#fdcb6e']
+            },
+            crawbug: {
+                name: 'Crawbug',
+                type: 'grass',
+                baseHp: 40,
+                baseAtk: 30,
+                baseDef: 45,
+                baseSpd: 30,
+                moves: ['Tackle', 'String Shot'],
+                colors: ['#a8e6cf', '#88d8b0', '#56ab2f']
+            },
+            sparkpup: {
+                name: 'Sparkpup',
+                type: 'fire',
+                baseHp: 35,
+                baseAtk: 55,
+                baseDef: 30,
+                baseSpd: 90,
+                moves: ['Thunder Shock', 'Quick Attack'],
+                colors: ['#fdcb6e', '#f39c12', '#fffa65']
+            },
+            boulderling: {
+                name: 'Boulderling',
+                type: 'normal',
+                baseHp: 50,
+                baseAtk: 60,
+                baseDef: 80,
+                baseSpd: 20,
+                moves: ['Rock Throw', 'Tackle'],
+                colors: ['#7f8c8d', '#636e72', '#b2bec3']
+            },
+            spooklet: {
+                name: 'Spooklet',
+                type: 'normal',
+                baseHp: 35,
+                baseAtk: 50,
+                baseDef: 35,
+                baseSpd: 80,
+                moves: ['Shadow Ball', 'Lick'],
+                colors: ['#a29bfe', '#6c5ce7', '#dfe6e9']
+            },
+            frostling: {
+                name: 'Frostling',
+                type: 'water',
+                baseHp: 55,
+                baseAtk: 50,
+                baseDef: 55,
+                baseSpd: 65,
+                moves: ['Ice Beam', 'Tackle'],
+                colors: ['#74b9ff', '#a8e6cf', '#ffffff']
+            },
+            sandviper: {
+                name: 'Sandviper',
+                type: 'normal',
+                baseHp: 52,
+                baseAtk: 58,
+                baseDef: 60,
+                baseSpd: 45,
+                moves: ['Bite', 'Sand Attack'],
+                colors: ['#f6e58d', '#f9ca24', '#b8860b']
+            },
+            magmite: {
+                name: 'Magmite',
+                type: 'fire',
+                baseHp: 60,
+                baseAtk: 70,
+                baseDef: 55,
+                baseSpd: 40,
+                moves: ['Lava Burst', 'Ember'],
+                colors: ['#ff4757', '#ff6348', '#ff7f50']
+            },
+            splashling: {
+                name: 'Splashling',
+                type: 'water',
+                baseHp: 45,
+                baseAtk: 50,
+                baseDef: 45,
+                baseSpd: 75,
+                moves: ['Water Gun', 'Tackle'],
+                colors: ['#54a0ff', '#2e86de', '#48dbfb']
+            },
+            thornbud: {
+                name: 'Thornbud',
+                type: 'grass',
+                baseHp: 55,
+                baseAtk: 55,
+                baseDef: 70,
+                baseSpd: 35,
+                moves: ['Thorn Shot', 'Vine Whip'],
+                colors: ['#26de81', '#20bf6b', '#badc58']
+            },
+            swamphopper: {
+                name: 'Swamphopper',
+                type: 'water',
+                baseHp: 60,
+                baseAtk: 52,
+                baseDef: 48,
+                baseSpd: 55,
+                moves: ['Bubble', 'Toxic'],
+                colors: ['#26de81', '#0984e3', '#00b894']
+            },
+            skywing: {
+                name: 'Skywing',
+                type: 'normal',
+                baseHp: 50,
+                baseAtk: 65,
+                baseDef: 40,
+                baseSpd: 85,
+                moves: ['Aerial Ace', 'Quick Attack'],
+                colors: ['#dfe6e9', '#636e72', '#2d3436']
+            },
+            crystalox: {
+                name: 'Crystalox',
+                type: 'normal',
+                baseHp: 70,
+                baseAtk: 75,
+                baseDef: 90,
+                baseSpd: 30,
+                moves: ['Crystal Slash', 'Tackle'],
+                colors: ['#a29bfe', '#74b9ff', '#dfe6e9']
+            },
+            shadowolf: {
+                name: 'Shadowolf',
+                type: 'normal',
+                baseHp: 65,
+                baseAtk: 80,
+                baseDef: 50,
+                baseSpd: 75,
+                moves: ['Shadow Claw', 'Bite'],
+                colors: ['#2d3436', '#636e72', '#6c5ce7']
+            },
+            celestia: {
+                name: 'Celestia',
+                type: 'normal',
+                baseHp: 80,
+                baseAtk: 85,
+                baseDef: 70,
+                baseSpd: 90,
+                moves: ['Mystic Beam', 'Quick Attack', 'Heal'],
+                colors: ['#fd79a8', '#e84393', '#ffeaa7']
+            }
+        };
+        
+        // ============ MOVES DATA ============
+        const moveData = {
+            // Fire moves
+            'Ember': { type: 'fire', power: 40, speed: 0, accuracy: 100 },
+            'Flamethrower': { type: 'fire', power: 90, speed: -1, accuracy: 100 },
+            'Lava Burst': { type: 'fire', power: 75, speed: -2, accuracy: 85 },
+            'Thunder Shock': { type: 'fire', power: 45, speed: 1, accuracy: 100 },
+            // Water moves
+            'Bubble': { type: 'water', power: 40, speed: 0, accuracy: 100 },
+            'Water Gun': { type: 'water', power: 50, speed: 0, accuracy: 100 },
+            'Hydro Pump': { type: 'water', power: 110, speed: -2, accuracy: 80 },
+            'Ice Beam': { type: 'water', power: 70, speed: 0, accuracy: 100 },
+            // Grass moves
+            'Vine Whip': { type: 'grass', power: 45, speed: 0, accuracy: 100 },
+            'Razor Leaf': { type: 'grass', power: 55, speed: 1, accuracy: 95 },
+            'Solar Beam': { type: 'grass', power: 120, speed: -3, accuracy: 100 },
+            'Thorn Shot': { type: 'grass', power: 50, speed: 0, accuracy: 100 },
+            // Normal moves
+            'Tackle': { type: 'normal', power: 40, speed: 0, accuracy: 100 },
+            'Scratch': { type: 'normal', power: 40, speed: 0, accuracy: 100 },
+            'Quick Attack': { type: 'normal', power: 40, speed: 2, accuracy: 100 },
+            'Bite': { type: 'normal', power: 50, speed: 0, accuracy: 100 },
+            'Peck': { type: 'normal', power: 35, speed: 0, accuracy: 100 },
+            'Rock Throw': { type: 'normal', power: 50, speed: -1, accuracy: 90 },
+            'Shadow Ball': { type: 'normal', power: 65, speed: 0, accuracy: 100 },
+            'Lick': { type: 'normal', power: 30, speed: 1, accuracy: 100 },
+            'Sand Attack': { type: 'normal', power: 0, speed: 1, accuracy: 100, effect: 'lowerAccuracy' },
+            'String Shot': { type: 'normal', power: 0, speed: 2, accuracy: 100, effect: 'lowerSpeed' },
+            'Toxic': { type: 'normal', power: 0, speed: 0, accuracy: 90, effect: 'poison' },
+            'Aerial Ace': { type: 'normal', power: 60, speed: 1, accuracy: 100 },
+            'Crystal Slash': { type: 'normal', power: 80, speed: -1, accuracy: 100 },
+            'Shadow Claw': { type: 'normal', power: 70, speed: 0, accuracy: 100 },
+            'Mystic Beam': { type: 'normal', power: 90, speed: 0, accuracy: 95 },
+            'Heal': { type: 'normal', power: 0, speed: -1, accuracy: 100, effect: 'heal' }
+        };
+        
+        // ============ AREAS DATA ============
+        const areas = [
+            { name: 'Starter Meadow', levelRange: [2, 5], creatures: ['squeakrat', 'fluffowl', 'crawbug'], unlockLevel: 1, icon: '🌻', bg: 'meadow' },
+            { name: 'Whispering Forest', levelRange: [5, 10], creatures: ['crawbug', 'fluffowl', 'leafling'], unlockLevel: 5, icon: '🌲', bg: 'forest' },
+            { name: 'Crystal Cave', levelRange: [8, 14], creatures: ['boulderling', 'sparkpup', 'spooklet'], unlockLevel: 10, icon: '💎', bg: 'cave' },
+            { name: 'Sunny Beach', levelRange: [10, 16], creatures: ['splashling', 'bubblefish', 'sandviper'], unlockLevel: 14, icon: '🏖️', bg: 'beach' },
+            { name: 'Misty Mountain', levelRange: [14, 20], creatures: ['skywing', 'boulderling', 'frostling'], unlockLevel: 18, icon: '⛰️', bg: 'mountain' },
+            { name: 'Murky Swamp', levelRange: [18, 24], creatures: ['swamphopper', 'thornbud', 'crawbug'], unlockLevel: 22, icon: '🌿', bg: 'swamp' },
+            { name: 'Scorched Desert', levelRange: [22, 28], creatures: ['sandviper', 'emberpup', 'sparkpup'], unlockLevel: 26, icon: '🏜️', bg: 'desert' },
+            { name: 'Frozen Peaks', levelRange: [26, 32], creatures: ['frostling', 'skywing', 'crystalox'], unlockLevel: 30, icon: '🏔️', bg: 'frozen' },
+            { name: 'Volcanic Ridge', levelRange: [30, 38], creatures: ['magmite', 'emberpup', 'shadowolf'], unlockLevel: 35, icon: '🌋', bg: 'volcano' },
+            { name: 'Mystic Sanctuary', levelRange: [35, 45], creatures: ['celestia', 'crystalox', 'shadowolf', 'spooklet'], unlockLevel: 40, icon: '✨', bg: 'mystic' }
+        ];
+        
+        // ============ GAME STATE ============
+        let gameState = {
+            playerName: '',
+            playerGender: null,
+            team: [],
+            activeCreature: 0,
+            currentArea: 0,
+            playerX: 4,
+            playerY: 4,
+            inBattle: false,
+            wildCreature: null,
+            turnQueue: [],
+            currentTurn: 0,
+            battleOver: false,
+            catchBalls: 10,
+            items: {
+                potion: 3,
+                superPotion: 1,
+                hyperPotion: 0
+            },
+            floorItems: []
+        };
+        
+        // ============ ITEMS DATA ============
+        const itemData = {
+            potion: { name: 'Potion', heal: 20, sprite: '🧴', color: '#e74c3c' },
+            superPotion: { name: 'Super Potion', heal: 50, sprite: '🧪', color: '#9b59b6' },
+            hyperPotion: { name: 'Hyper Potion', heal: 100, sprite: '💊', color: '#f1c40f' },
+            catchBall: { name: 'Catch Ball', sprite: '🎯', color: '#3498db' }
+        };
+        
+        // ============ CHARACTER CREATION ============
+        function selectGender(gender) {
+            gameState.playerGender = gender;
+            
+            // Update button styles
+            document.getElementById('boy-btn').classList.remove('selected');
+            document.getElementById('girl-btn').classList.remove('selected');
+            
+            if (gender === 'boy') {
+                document.getElementById('boy-btn').classList.add('selected');
+            } else {
+                document.getElementById('girl-btn').classList.add('selected');
+            }
+            
+            checkCanContinue();
+        }
+        
+        function checkCanContinue() {
+            const name = document.getElementById('name-input').value.trim();
+            const btn = document.getElementById('continue-btn');
+            
+            if (name.length > 0 && gameState.playerGender) {
+                btn.disabled = false;
+            } else {
+                btn.disabled = true;
+            }
+        }
+        
+        function showStarterSelect() {
+            gameState.playerName = document.getElementById('name-input').value.trim();
+            
+            document.getElementById('character-creation').style.display = 'none';
+            document.getElementById('starter-section').classList.add('visible');
+            document.querySelector('#title-screen h2').textContent = `Welcome, ${gameState.playerName}!`;
+            
+            // Show pixel creature sprites
+            document.getElementById('starter-fire-sprite').innerHTML = getCreatureSprite('emberpup', 48);
+            document.getElementById('starter-water-sprite').innerHTML = getCreatureSprite('bubblefish', 48);
+            document.getElementById('starter-grass-sprite').innerHTML = getCreatureSprite('leafling', 48);
+        }
+        
+        // ============ MAP GENERATION ============
+        function generateMap() {
+            const map = document.getElementById('game-map');
+            const area = areas[gameState.currentArea];
+            
+            // Clear existing tiles and floor items
+            const existingTiles = map.querySelectorAll('.tile');
+            existingTiles.forEach(t => t.remove());
+            const existingItems = map.querySelectorAll('.floor-item');
+            existingItems.forEach(i => i.remove());
+            const existingBgElements = map.querySelectorAll('.bg-cloud, .bg-star');
+            existingBgElements.forEach(e => e.remove());
+            
+            // Clear floor items array
+            gameState.floorItems = [];
+            
+            // Apply area background
+            map.className = '';
+            map.id = 'game-map';
+            map.classList.add(area.bg);
+            
+            // Add background decorations based on area
+            addBackgroundDecorations(area.bg);
+            
+            // Different map layouts per area
+            const mapWidth = 10;
+            const mapHeight = 10;
+            
+            for (let y = 0; y < mapHeight; y++) {
+                for (let x = 0; x < mapWidth; x++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    tile.style.left = (x * 40) + 'px';
+                    tile.style.top = (y * 40) + 'px';
+                    tile.dataset.x = x;
+                    tile.dataset.y = y;
+                    
+                    // Create varied terrain based on area
+                    let tileType = getTileType(x, y, gameState.currentArea);
+                    tile.classList.add(tileType);
+                    
+                    map.appendChild(tile);
+                }
+            }
+            
+            // Spawn random floor items
+            spawnFloorItems();
+            
+            document.getElementById('area-name').textContent = area.name;
+        }
+        
+        function addBackgroundDecorations(bgType) {
+            const map = document.getElementById('game-map');
+            
+            if (bgType === 'meadow' || bgType === 'beach') {
+                // Add clouds
+                for (let i = 0; i < 3; i++) {
+                    const cloud = document.createElement('div');
+                    cloud.className = 'bg-cloud';
+                    cloud.style.top = (20 + Math.random() * 60) + 'px';
+                    cloud.style.width = (60 + Math.random() * 40) + 'px';
+                    cloud.style.height = (20 + Math.random() * 15) + 'px';
+                    cloud.style.animationDelay = (Math.random() * 20) + 's';
+                    map.appendChild(cloud);
+                }
+            }
+            
+            if (bgType === 'cave' || bgType === 'mystic') {
+                // Add twinkling stars/crystals
+                for (let i = 0; i < 15; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'bg-star';
+                    star.style.top = (Math.random() * 380) + 'px';
+                    star.style.left = (Math.random() * 380) + 'px';
+                    star.style.animationDelay = (Math.random() * 2) + 's';
+                    if (bgType === 'mystic') {
+                        star.style.background = ['#ff79c6', '#8be9fd', '#f1fa8c'][Math.floor(Math.random() * 3)];
+                    }
+                    map.appendChild(star);
+                }
+            }
+            
+            if (bgType === 'volcano') {
+                // Add ember particles
+                for (let i = 0; i < 8; i++) {
+                    const ember = document.createElement('div');
+                    ember.className = 'bg-star';
+                    ember.style.top = (Math.random() * 200) + 'px';
+                    ember.style.left = (Math.random() * 380) + 'px';
+                    ember.style.background = ['#ff6b35', '#ff4444', '#ffaa00'][Math.floor(Math.random() * 3)];
+                    ember.style.width = '6px';
+                    ember.style.height = '6px';
+                    ember.style.animationDelay = (Math.random() * 2) + 's';
+                    map.appendChild(ember);
+                }
+            }
+            
+            if (bgType === 'frozen') {
+                // Add snowflakes
+                for (let i = 0; i < 10; i++) {
+                    const snow = document.createElement('div');
+                    snow.className = 'bg-star';
+                    snow.style.top = (Math.random() * 380) + 'px';
+                    snow.style.left = (Math.random() * 380) + 'px';
+                    snow.style.background = '#fff';
+                    snow.style.width = '5px';
+                    snow.style.height = '5px';
+                    snow.style.opacity = '0.8';
+                    map.appendChild(snow);
+                }
+            }
+        }
+        
+        function spawnFloorItems() {
+            const map = document.getElementById('game-map');
+            const numItems = 2 + Math.floor(Math.random() * 3); // 2-4 items per area
+            
+            for (let i = 0; i < numItems; i++) {
+                let x, y, attempts = 0;
+                
+                // Find a walkable spot that isn't the player's position
+                do {
+                    x = 1 + Math.floor(Math.random() * 8);
+                    y = 1 + Math.floor(Math.random() * 8);
+                    attempts++;
+                } while ((!isWalkable(x, y) || (x === gameState.playerX && y === gameState.playerY)) && attempts < 20);
+                
+                if (attempts >= 20) continue;
+                
+                // Decide what item to spawn
+                const roll = Math.random();
+                let itemType;
+                if (roll < 0.5) {
+                    itemType = 'potion';
+                } else if (roll < 0.75) {
+                    itemType = 'superPotion';
+                } else if (roll < 0.9) {
+                    itemType = 'catchBall';
+                } else {
+                    itemType = 'hyperPotion';
+                }
+                
+                const item = itemData[itemType];
+                
+                // Create floor item element
+                const floorItem = document.createElement('div');
+                floorItem.className = 'floor-item';
+                floorItem.style.left = (x * 40 + 5) + 'px';
+                floorItem.style.top = (y * 40 + 5) + 'px';
+                floorItem.innerHTML = `<div class="floor-item-glow"></div>${item.sprite}`;
+                floorItem.dataset.x = x;
+                floorItem.dataset.y = y;
+                floorItem.dataset.type = itemType;
+                
+                map.appendChild(floorItem);
+                
+                gameState.floorItems.push({ x, y, type: itemType, element: floorItem });
+            }
+        }
+        
+        function checkForFloorItem() {
+            const foundIndex = gameState.floorItems.findIndex(
+                item => item.x === gameState.playerX && item.y === gameState.playerY
+            );
+            
+            if (foundIndex !== -1) {
+                const item = gameState.floorItems[foundIndex];
+                const itemInfo = itemData[item.type];
+                
+                // Add to inventory
+                if (item.type === 'catchBall') {
+                    gameState.catchBalls += 3;
+                } else {
+                    gameState.items[item.type]++;
+                }
+                
+                // Remove from map
+                item.element.remove();
+                gameState.floorItems.splice(foundIndex, 1);
+                
+                // Show notification
+                if (item.type === 'catchBall') {
+                    showNotification(`Found 3 Catch Balls!`);
+                } else {
+                    showNotification(`Found a ${itemInfo.name}!`);
+                }
+                
+                updateTeamDisplay();
+            }
+        }
+        
+        function getTileType(x, y, areaIndex) {
+            const seed = (x * 7 + y * 13 + areaIndex * 31) % 100;
+            
+            // Border trees/rocks
+            if (x === 0 || x === 9 || y === 0 || y === 9) {
+                if (areaIndex === 2 || areaIndex === 7) return 'rock';
+                if (areaIndex === 3 || areaIndex === 5) return 'water-tile';
+                return 'tree';
+            }
+            
+            // Paths
+            if ((x === 4 || x === 5) || (y === 4 || y === 5)) {
+                if (seed > 70) return 'tall-grass';
+                return 'path';
+            }
+            
+            // Random terrain
+            if (seed < 40) return 'tall-grass';
+            if (seed < 55 && (areaIndex === 3 || areaIndex === 5)) return 'water-tile';
+            if (seed < 60 && areaIndex >= 6) return 'rock';
+            
+            return 'grass';
+        }
+        
+        function isWalkable(x, y) {
+            const tile = document.querySelector(`.tile[data-x="${x}"][data-y="${y}"]`);
+            if (!tile) return false;
+            return !tile.classList.contains('tree') && 
+                   !tile.classList.contains('rock') && 
+                   !tile.classList.contains('water-tile');
+        }
+        
+        // ============ PLAYER MOVEMENT ============
+        function movePlayer(dx, dy) {
+            if (gameState.inBattle) return;
+            
+            const newX = gameState.playerX + dx;
+            const newY = gameState.playerY + dy;
+            
+            if (newX >= 0 && newX < 10 && newY >= 0 && newY < 10 && isWalkable(newX, newY)) {
+                gameState.playerX = newX;
+                gameState.playerY = newY;
+                
+                const player = document.getElementById('player');
+                player.style.left = (newX * 40) + 'px';
+                player.style.top = (newY * 40 - 5) + 'px';
+                
+                // Check for floor item pickup
+                checkForFloorItem();
+                
+                // Check for wild encounter
+                const tile = document.querySelector(`.tile[data-x="${newX}"][data-y="${newY}"]`);
+                if (tile && tile.classList.contains('tall-grass')) {
+                    if (Math.random() < 0.2) {
+                        startWildBattle();
+                    }
+                }
+            }
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
+            if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
+            if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
+            if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
+            if (e.key === 'm' || e.key === 'M') toggleMenu();
+            if (e.key === 't' || e.key === 'T') toggleAreaSelect();
+            if (e.key === 'b' || e.key === 'B') toggleBag();
+        });
+        
+        // ============ ITEM BAG FUNCTIONS ============
+        function toggleBag() {
+            if (gameState.inBattle) return;
+            const bag = document.getElementById('bag-overlay');
+            if (bag.style.display === 'flex') {
+                closeBag();
+            } else {
+                showBag();
+            }
+        }
+        
+        function showBag() {
+            const bag = document.getElementById('bag-overlay');
+            const contents = document.getElementById('bag-contents');
+            contents.innerHTML = '';
+            
+            // Show potions
+            const items = [
+                { key: 'potion', data: itemData.potion, desc: 'Heals 20 HP' },
+                { key: 'superPotion', data: itemData.superPotion, desc: 'Heals 50 HP' },
+                { key: 'hyperPotion', data: itemData.hyperPotion, desc: 'Heals 100 HP' }
+            ];
+            
+            items.forEach(item => {
+                const count = gameState.items[item.key];
+                const div = document.createElement('div');
+                div.className = 'bag-item';
+                div.innerHTML = `
+                    <span class="bag-item-sprite">${item.data.sprite}</span>
+                    <div class="bag-item-info">
+                        <div class="bag-item-name">${item.data.name}</div>
+                        <div class="bag-item-desc">${item.desc}</div>
+                    </div>
+                    <span class="bag-item-count">x${count}</span>
+                    <button class="use-item-btn" onclick="useItemFromBag('${item.key}')" ${count === 0 ? 'disabled' : ''}>Use</button>
+                `;
+                contents.appendChild(div);
+            });
+            
+            // Show catch balls
+            const ballDiv = document.createElement('div');
+            ballDiv.className = 'bag-item';
+            ballDiv.innerHTML = `
+                <span class="bag-item-sprite">${itemData.catchBall.sprite}</span>
+                <div class="bag-item-info">
+                    <div class="bag-item-name">Catch Ball</div>
+                    <div class="bag-item-desc">Catch wild creatures</div>
+                </div>
+                <span class="bag-item-count">x${gameState.catchBalls}</span>
+            `;
+            contents.appendChild(ballDiv);
+            
+            bag.style.display = 'flex';
+        }
+        
+        function closeBag() {
+            document.getElementById('bag-overlay').style.display = 'none';
+        }
+        
+        function useItemFromBag(itemKey) {
+            if (gameState.items[itemKey] <= 0) return;
+            
+            // Find a creature that needs healing
+            const creature = gameState.team[gameState.activeCreature];
+            
+            if (creature.currentHp >= creature.maxHp) {
+                showNotification(`${creature.name} is already at full health!`);
+                return;
+            }
+            
+            const healAmount = itemData[itemKey].heal;
+            const oldHp = creature.currentHp;
+            creature.currentHp = Math.min(creature.maxHp, creature.currentHp + healAmount);
+            const healed = creature.currentHp - oldHp;
+            
+            gameState.items[itemKey]--;
+            
+            showNotification(`${creature.name} healed ${healed} HP!`);
+            updateStatsDisplay();
+            showBag(); // Refresh bag display
+        }
+        
+        // Battle bag
+        function showBattleBag() {
+            const bagMenu = document.getElementById('bag-menu');
+            bagMenu.innerHTML = '';
+            
+            const items = [
+                { key: 'potion', data: itemData.potion },
+                { key: 'superPotion', data: itemData.superPotion },
+                { key: 'hyperPotion', data: itemData.hyperPotion }
+            ];
+            
+            items.forEach(item => {
+                const count = gameState.items[item.key];
+                const btn = document.createElement('button');
+                btn.className = 'move-btn';
+                btn.style.borderColor = item.data.color;
+                btn.innerHTML = `${item.data.sprite} ${item.data.name}<span class="move-power">x${count}</span>`;
+                btn.disabled = count === 0;
+                btn.onclick = () => useItemInBattle(item.key);
+                bagMenu.appendChild(btn);
+            });
+            
+            const backBtn = document.createElement('button');
+            backBtn.className = 'move-btn back-btn';
+            backBtn.textContent = '← Back';
+            backBtn.onclick = showMainBattleMenu;
+            bagMenu.appendChild(backBtn);
+            
+            document.getElementById('battle-actions').style.display = 'none';
+            document.getElementById('moves-menu').style.display = 'none';
+            document.getElementById('team-menu').style.display = 'none';
+            bagMenu.style.display = 'grid';
+        }
+        
+        function useItemInBattle(itemKey) {
+            if (gameState.items[itemKey] <= 0) return;
+            
+            const creature = gameState.team[gameState.activeCreature];
+            
+            if (creature.currentHp >= creature.maxHp) {
+                document.getElementById('battle-message').textContent = `${creature.name} is already at full health!`;
+                return;
+            }
+            
+            const healAmount = itemData[itemKey].heal;
+            const oldHp = creature.currentHp;
+            creature.currentHp = Math.min(creature.maxHp, creature.currentHp + healAmount);
+            const healed = creature.currentHp - oldHp;
+            
+            gameState.items[itemKey]--;
+            
+            document.getElementById('battle-message').textContent = `Used ${itemData[itemKey].name}! ${creature.name} healed ${healed} HP!`;
+            updateBattleHp();
+            
+            showMainBattleMenu();
+            
+            // Enemy gets a turn after using item
+            setTimeout(() => {
+                if (!gameState.battleOver) {
+                    enemyTurn();
+                }
+            }, 1500);
+        }
+        
+        // ============ CREATURE FUNCTIONS ============
+        function createCreature(speciesId, level) {
+            const species = creatureData[speciesId];
+            const creature = {
+                speciesId: speciesId,
+                name: species.name,
+                type: species.type,
+                level: level,
+                xp: 0,
+                xpToNext: level * 15,
+                maxHp: Math.floor(species.baseHp + (level * 2)),
+                currentHp: Math.floor(species.baseHp + (level * 2)),
+                atk: Math.floor(species.baseAtk + (level * 1.5)),
+                def: Math.floor(species.baseDef + (level * 1.5)),
+                spd: Math.floor(species.baseSpd + (level * 1)),
+                moves: species.moves.slice(0, Math.min(4, 1 + Math.floor(level / 5))),
+                evolvesTo: species.evolvesTo,
+                evolveLevel: species.evolveLevel,
+                colors: species.colors
+            };
+            return creature;
+        }
+        
+        // Generate pixel art creature HTML
+        function getCreatureSprite(speciesId, size = 64) {
+            const species = creatureData[speciesId];
+            const colors = species.colors || ['#888', '#666', '#aaa'];
+            const type = species.type;
+            
+            // Different shapes based on creature type/name
+            let spriteHTML = '';
+            const s = size / 64; // scale factor
+            
+            if (speciesId.includes('pup') || speciesId.includes('hound') || speciesId.includes('wolf')) {
+                // Dog-like creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${8*s}px;left:${12*s}px;width:${40*s}px;height:${30*s}px;background:${colors[0]};border-radius:${12*s}px;"></div>
+                        <div style="position:absolute;bottom:${30*s}px;left:${6*s}px;width:${24*s}px;height:${24*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${48*s}px;left:${4*s}px;width:${10*s}px;height:${14*s}px;background:${colors[1]};border-radius:${4*s}px ${4*s}px 0 0;"></div>
+                        <div style="position:absolute;bottom:${48*s}px;left:${18*s}px;width:${10*s}px;height:${14*s}px;background:${colors[1]};border-radius:${4*s}px ${4*s}px 0 0;"></div>
+                        <div style="position:absolute;bottom:${38*s}px;left:${10*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${39*s}px;left:${12*s}px;width:${3*s}px;height:${3*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${38*s}px;left:${18*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${39*s}px;left:${20*s}px;width:${3*s}px;height:${3*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${32*s}px;left:${14*s}px;width:${6*s}px;height:${4*s}px;background:#333;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${4*s}px;right:${8*s}px;width:${16*s}px;height:${8*s}px;background:${colors[1]};border-radius:${8*s}px;transform:rotate(-20deg);"></div>
+                    </div>`;
+            } else if (speciesId.includes('fish') || speciesId.includes('fin') || speciesId.includes('splash')) {
+                // Fish-like creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;top:${16*s}px;left:${8*s}px;width:${40*s}px;height:${28*s}px;background:${colors[0]};border-radius:50% 30% 30% 50%;"></div>
+                        <div style="position:absolute;top:${22*s}px;right:${6*s}px;width:${0}px;height:${0}px;border-left:${14*s}px solid ${colors[1]};border-top:${10*s}px solid transparent;border-bottom:${10*s}px solid transparent;"></div>
+                        <div style="position:absolute;top:${10*s}px;left:${20*s}px;width:${12*s}px;height:${16*s}px;background:${colors[1]};border-radius:${6*s}px ${6*s}px 0 0;transform:rotate(-15deg);"></div>
+                        <div style="position:absolute;top:${24*s}px;left:${14*s}px;width:${8*s}px;height:${8*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;top:${26*s}px;left:${16*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;top:${34*s}px;left:${12*s}px;width:${6*s}px;height:${3*s}px;background:${colors[2]};border-radius:0 0 ${3*s}px ${3*s}px;"></div>
+                    </div>`;
+            } else if (speciesId.includes('leaf') || speciesId.includes('flora') || speciesId.includes('thorn') || speciesId.includes('bud')) {
+                // Plant-like creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${6*s}px;left:${16*s}px;width:${32*s}px;height:${32*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${34*s}px;left:${20*s}px;width:${12*s}px;height:${20*s}px;background:${colors[1]};border-radius:50% 50% 0 0;transform:rotate(-15deg);"></div>
+                        <div style="position:absolute;bottom:${34*s}px;left:${32*s}px;width:${12*s}px;height:${20*s}px;background:${colors[1]};border-radius:50% 50% 0 0;transform:rotate(15deg);"></div>
+                        <div style="position:absolute;bottom:${38*s}px;left:${26*s}px;width:${12*s}px;height:${18*s}px;background:${colors[2]};border-radius:50% 50% 0 0;"></div>
+                        <div style="position:absolute;bottom:${22*s}px;left:${22*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${23*s}px;left:${24*s}px;width:${3*s}px;height:${3*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${22*s}px;left:${36*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${23*s}px;left:${38*s}px;width:${3*s}px;height:${3*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${14*s}px;left:${28*s}px;width:${8*s}px;height:${4*s}px;background:#e84118;border-radius:50%;"></div>
+                    </div>`;
+            } else if (speciesId.includes('rat') || speciesId.includes('squeak')) {
+                // Rodent creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${10*s}px;left:${14*s}px;width:${30*s}px;height:${22*s}px;background:${colors[0]};border-radius:${10*s}px;"></div>
+                        <div style="position:absolute;bottom:${24*s}px;left:${8*s}px;width:${20*s}px;height:${18*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${38*s}px;left:${8*s}px;width:${10*s}px;height:${14*s}px;background:${colors[1]};border-radius:50% 50% 0 0;"></div>
+                        <div style="position:absolute;bottom:${38*s}px;left:${18*s}px;width:${10*s}px;height:${14*s}px;background:${colors[1]};border-radius:50% 50% 0 0;"></div>
+                        <div style="position:absolute;bottom:${32*s}px;left:${12*s}px;width:${5*s}px;height:${5*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${32*s}px;left:${20*s}px;width:${5*s}px;height:${5*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${26*s}px;left:${16*s}px;width:${5*s}px;height:${4*s}px;background:#ff9ff3;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${12*s}px;right:${6*s}px;width:${20*s}px;height:${4*s}px;background:${colors[1]};border-radius:${2*s}px;transform:rotate(-10deg);"></div>
+                    </div>`;
+            } else if (speciesId.includes('owl') || speciesId.includes('wing') || speciesId.includes('sky')) {
+                // Bird creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${8*s}px;left:${16*s}px;width:${32*s}px;height:${36*s}px;background:${colors[0]};border-radius:50% 50% 40% 40%;"></div>
+                        <div style="position:absolute;bottom:${20*s}px;left:${4*s}px;width:${18*s}px;height:${12*s}px;background:${colors[1]};border-radius:50%;transform:rotate(-30deg);"></div>
+                        <div style="position:absolute;bottom:${20*s}px;right:${4*s}px;width:${18*s}px;height:${12*s}px;background:${colors[1]};border-radius:50%;transform:rotate(30deg);"></div>
+                        <div style="position:absolute;bottom:${30*s}px;left:${22*s}px;width:${8*s}px;height:${8*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${31*s}px;left:${24*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${30*s}px;left:${34*s}px;width:${8*s}px;height:${8*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${31*s}px;left:${36*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${22*s}px;left:${28*s}px;width:${8*s}px;height:${6*s}px;background:${colors[2]};border-radius:0 0 50% 50%;clip-path:polygon(50% 100%, 0 0, 100% 0);"></div>
+                    </div>`;
+            } else if (speciesId.includes('rock') || speciesId.includes('boulder') || speciesId.includes('crystal')) {
+                // Rock/Crystal creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${6*s}px;left:${12*s}px;width:${40*s}px;height:${34*s}px;background:${colors[0]};border-radius:${8*s}px;clip-path:polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%);"></div>
+                        <div style="position:absolute;bottom:${20*s}px;left:${18*s}px;width:${10*s}px;height:${10*s}px;background:${colors[1]};border-radius:${2*s}px;transform:rotate(15deg);"></div>
+                        <div style="position:absolute;bottom:${18*s}px;left:${36*s}px;width:${8*s}px;height:${8*s}px;background:${colors[2]};border-radius:${2*s}px;transform:rotate(-10deg);"></div>
+                        <div style="position:absolute;bottom:${26*s}px;left:${22*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${27*s}px;left:${24*s}px;width:${3*s}px;height:${3*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${26*s}px;left:${36*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${27*s}px;left:${38*s}px;width:${3*s}px;height:${3*s}px;background:#000;border-radius:50%;"></div>
+                    </div>`;
+            } else if (speciesId.includes('ghost') || speciesId.includes('spook')) {
+                // Ghost creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${6*s}px;left:${12*s}px;width:${40*s}px;height:${44*s}px;background:${colors[0]};border-radius:${20*s}px ${20*s}px 0 0;"></div>
+                        <div style="position:absolute;bottom:${0}px;left:${12*s}px;width:${40*s}px;height:${12*s}px;background:${colors[0]};clip-path:polygon(0% 0%, 15% 100%, 30% 0%, 45% 100%, 60% 0%, 75% 100%, 90% 0%, 100% 100%, 100% 0%);"></div>
+                        <div style="position:absolute;bottom:${30*s}px;left:${18*s}px;width:${10*s}px;height:${10*s}px;background:${colors[1]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${32*s}px;left:${20*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${30*s}px;left:${36*s}px;width:${10*s}px;height:${10*s}px;background:${colors[1]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${32*s}px;left:${38*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${20*s}px;left:${26*s}px;width:${12*s}px;height:${8*s}px;background:${colors[2]};border-radius:50%;"></div>
+                    </div>`;
+            } else if (speciesId.includes('viper') || speciesId.includes('snake')) {
+                // Snake creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${8*s}px;left:${6*s}px;width:${50*s}px;height:${14*s}px;background:${colors[0]};border-radius:${7*s}px;"></div>
+                        <div style="position:absolute;bottom:${16*s}px;left:${6*s}px;width:${20*s}px;height:${20*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${26*s}px;left:${10*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${27*s}px;left:${12*s}px;width:${3*s}px;height:${3*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${26*s}px;left:${18*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${27*s}px;left:${20*s}px;width:${3*s}px;height:${3*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${18*s}px;left:${2*s}px;width:${8*s}px;height:${3*s}px;background:#ff6b6b;border-radius:${2*s}px;"></div>
+                        <div style="position:absolute;bottom:${10*s}px;left:${20*s}px;width:${8*s}px;height:${8*s}px;background:${colors[1]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${10*s}px;left:${34*s}px;width:${8*s}px;height:${8*s}px;background:${colors[1]};border-radius:50%;"></div>
+                    </div>`;
+            } else if (speciesId.includes('frog') || speciesId.includes('hopper')) {
+                // Frog creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${6*s}px;left:${12*s}px;width:${40*s}px;height:${28*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${28*s}px;left:${14*s}px;width:${14*s}px;height:${14*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${30*s}px;left:${18*s}px;width:${6*s}px;height:${6*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${28*s}px;left:${36*s}px;width:${14*s}px;height:${14*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${30*s}px;left:${40*s}px;width:${6*s}px;height:${6*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${12*s}px;left:${26*s}px;width:${12*s}px;height:${4*s}px;background:${colors[1]};border-radius:0 0 ${6*s}px ${6*s}px;"></div>
+                        <div style="position:absolute;bottom:${2*s}px;left:${8*s}px;width:${16*s}px;height:${8*s}px;background:${colors[1]};border-radius:${4*s}px;"></div>
+                        <div style="position:absolute;bottom:${2*s}px;right:${8*s}px;width:${16*s}px;height:${8*s}px;background:${colors[1]};border-radius:${4*s}px;"></div>
+                    </div>`;
+            } else if (speciesId.includes('bug') || speciesId.includes('craw')) {
+                // Bug creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${6*s}px;left:${18*s}px;width:${28*s}px;height:${20*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${20*s}px;left:${22*s}px;width:${20*s}px;height:${18*s}px;background:${colors[1]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${32*s}px;left:${26*s}px;width:${12*s}px;height:${12*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${36*s}px;left:${28*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${36*s}px;left:${34*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${40*s}px;left:${26*s}px;width:${3*s}px;height:${10*s}px;background:${colors[2]};border-radius:${2*s}px;transform:rotate(-20deg);"></div>
+                        <div style="position:absolute;bottom:${40*s}px;left:${36*s}px;width:${3*s}px;height:${10*s}px;background:${colors[2]};border-radius:${2*s}px;transform:rotate(20deg);"></div>
+                    </div>`;
+            } else if (speciesId.includes('magm')) {
+                // Magma creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${4*s}px;left:${10*s}px;width:${44*s}px;height:${36*s}px;background:${colors[0]};border-radius:${10*s}px ${10*s}px ${20*s}px ${20*s}px;"></div>
+                        <div style="position:absolute;bottom:${34*s}px;left:${16*s}px;width:${8*s}px;height:${16*s}px;background:${colors[1]};border-radius:${4*s}px ${4*s}px 0 0;animation:flameFlicker 0.3s infinite;"></div>
+                        <div style="position:absolute;bottom:${34*s}px;left:${28*s}px;width:${8*s}px;height:${20*s}px;background:${colors[2]};border-radius:${4*s}px ${4*s}px 0 0;animation:flameFlicker 0.4s infinite;"></div>
+                        <div style="position:absolute;bottom:${34*s}px;left:${40*s}px;width:${8*s}px;height:${14*s}px;background:${colors[1]};border-radius:${4*s}px ${4*s}px 0 0;animation:flameFlicker 0.35s infinite;"></div>
+                        <div style="position:absolute;bottom:${22*s}px;left:${18*s}px;width:${8*s}px;height:${8*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${24*s}px;left:${20*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${22*s}px;left:${38*s}px;width:${8*s}px;height:${8*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${24*s}px;left:${40*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                    </div>`;
+            } else if (speciesId.includes('celest')) {
+                // Mystical/Unicorn creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${6*s}px;left:${14*s}px;width:${36*s}px;height:${26*s}px;background:${colors[0]};border-radius:${12*s}px;"></div>
+                        <div style="position:absolute;bottom:${26*s}px;left:${8*s}px;width:${22*s}px;height:${22*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${44*s}px;left:${16*s}px;width:${8*s}px;height:${18*s}px;background:linear-gradient(${colors[2]}, ${colors[1]});border-radius:${4*s}px ${4*s}px 0 0;transform:rotate(-5deg);"></div>
+                        <div style="position:absolute;bottom:${38*s}px;left:${6*s}px;width:${10*s}px;height:${14*s}px;background:${colors[1]};border-radius:${5*s}px ${5*s}px 0 0;"></div>
+                        <div style="position:absolute;bottom:${38*s}px;left:${20*s}px;width:${10*s}px;height:${14*s}px;background:${colors[1]};border-radius:${5*s}px ${5*s}px 0 0;"></div>
+                        <div style="position:absolute;bottom:${34*s}px;left:${10*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${35*s}px;left:${12*s}px;width:${3*s}px;height:${3*s}px;background:#e84393;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${34*s}px;left:${20*s}px;width:${6*s}px;height:${6*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${35*s}px;left:${22*s}px;width:${3*s}px;height:${3*s}px;background:#e84393;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${28*s}px;left:${4*s}px;width:${6*s}px;height:${4*s}px;background:${colors[2]};border-radius:50%;"></div>
+                    </div>`;
+            } else {
+                // Default blob creature
+                spriteHTML = `
+                    <div style="position:relative;width:${size}px;height:${size}px;">
+                        <div style="position:absolute;bottom:${8*s}px;left:${12*s}px;width:${40*s}px;height:${40*s}px;background:${colors[0]};border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${32*s}px;left:${20*s}px;width:${8*s}px;height:${8*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${33*s}px;left:${22*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${32*s}px;left:${36*s}px;width:${8*s}px;height:${8*s}px;background:#fff;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${33*s}px;left:${38*s}px;width:${4*s}px;height:${4*s}px;background:#000;border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:${20*s}px;left:${26*s}px;width:${12*s}px;height:${6*s}px;background:${colors[1]};border-radius:${6*s}px;"></div>
+                    </div>`;
+            }
+            
+            return spriteHTML;
+        }
+        
+        function selectStarter(type) {
+            let speciesId;
+            if (type === 'fire') speciesId = 'emberpup';
+            if (type === 'water') speciesId = 'bubblefish';
+            if (type === 'grass') speciesId = 'leafling';
+            
+            const starter = createCreature(speciesId, 5);
+            gameState.team.push(starter);
+            
+            document.getElementById('title-screen').style.display = 'none';
+            document.getElementById('explore-screen').style.display = 'block';
+            
+            generateMap();
+            updateTeamDisplay();
+            updateStatsDisplay();
+            
+            // Position player with selected sprite
+            const player = document.getElementById('player');
+            const playerSprite = document.getElementById('player-sprite');
+            
+            // Update sprite based on gender
+            if (gameState.playerGender === 'girl') {
+                playerSprite.querySelector('.trainer-hair').classList.remove('boy-hair');
+                playerSprite.querySelector('.trainer-hair').classList.add('girl-hair');
+                playerSprite.querySelector('.trainer-hat').classList.add('girl-hat');
+            }
+            
+            player.style.left = (gameState.playerX * 40) + 'px';
+            player.style.top = (gameState.playerY * 40 - 5) + 'px';
+            
+            showNotification(`${gameState.playerName}, your adventure begins!`);
+        }
+        
+        function updateTeamDisplay() {
+            const display = document.getElementById('team-display');
+            display.innerHTML = '';
+            
+            gameState.team.forEach((creature, index) => {
+                const div = document.createElement('div');
+                div.className = 'team-creature' + (index === gameState.activeCreature ? ' selected' : '');
+                div.innerHTML = getCreatureSprite(creature.speciesId, 32);
+                div.onclick = () => {
+                    gameState.activeCreature = index;
+                    updateTeamDisplay();
+                    updateStatsDisplay();
+                };
+                display.appendChild(div);
+            });
+            
+            // Show catch balls
+            const ballsDiv = document.createElement('div');
+            ballsDiv.style.marginLeft = 'auto';
+            ballsDiv.style.color = '#fff';
+            ballsDiv.style.fontSize = '18px';
+            ballsDiv.textContent = `🎯 ${gameState.catchBalls}`;
+            display.appendChild(ballsDiv);
+        }
+        
+        function updateStatsDisplay() {
+            const creature = gameState.team[gameState.activeCreature];
+            const display = document.getElementById('stats-display');
+            
+            const hpPercent = (creature.currentHp / creature.maxHp) * 100;
+            const xpPercent = (creature.xp / creature.xpToNext) * 100;
+            
+            display.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                    ${getCreatureSprite(creature.speciesId, 32)}
+                    <div>
+                        <div style="font-size: 20px;">${creature.name} <span style="color: #888;">Lv.${creature.level}</span></div>
+                    </div>
+                </div>
+                <div>HP: ${creature.currentHp}/${creature.maxHp}</div>
+                <div class="stat-bar"><div class="stat-fill hp-fill" style="width: ${hpPercent}%"></div></div>
+                <div>XP: ${creature.xp}/${creature.xpToNext}</div>
+                <div class="stat-bar"><div class="stat-fill xp-fill" style="width: ${xpPercent}%"></div></div>
+            `;
+        }
+        
+        // ============ BATTLE SYSTEM ============
+        function startWildBattle() {
+            gameState.inBattle = true;
+            gameState.battleOver = false;
+            
+            const area = areas[gameState.currentArea];
+            const wildSpecies = area.creatures[Math.floor(Math.random() * area.creatures.length)];
+            const wildLevel = Math.floor(Math.random() * (area.levelRange[1] - area.levelRange[0])) + area.levelRange[0];
+            
+            gameState.wildCreature = createCreature(wildSpecies, wildLevel);
+            
+            // Setup battle UI
+            const playerCreature = gameState.team[gameState.activeCreature];
+            
+            document.getElementById('enemy-sprite').innerHTML = getCreatureSprite(gameState.wildCreature.speciesId, 70);
+            document.getElementById('enemy-name').textContent = `Wild ${gameState.wildCreature.name}`;
+            document.getElementById('enemy-level').textContent = `Lv. ${gameState.wildCreature.level}`;
+            updateBattleHp();
+            
+            document.getElementById('player-sprite').innerHTML = getCreatureSprite(playerCreature.speciesId, 70);
+            document.getElementById('player-name').textContent = playerCreature.name;
+            document.getElementById('player-level').textContent = `Lv. ${playerCreature.level}`;
+            
+            // Calculate turn order based on speed
+            calculateTurnOrder();
+            
+            document.getElementById('battle-screen').style.display = 'flex';
+            document.getElementById('battle-message').textContent = `A wild ${gameState.wildCreature.name} appeared!`;
+            
+            showMainBattleMenu();
+        }
+        
+        function calculateTurnOrder() {
+            const playerCreature = gameState.team[gameState.activeCreature];
+            const enemy = gameState.wildCreature;
+            
+            // Create action queue based on speed
+            gameState.turnQueue = [];
+            
+            // Higher speed = more turns
+            const playerTurns = Math.max(1, Math.floor(playerCreature.spd / 40));
+            const enemyTurns = Math.max(1, Math.floor(enemy.spd / 40));
+            
+            // Interleave turns based on speed ratio
+            let pIndex = 0, eIndex = 0;
+            const pInterval = 100 / playerTurns;
+            const eInterval = 100 / enemyTurns;
+            
+            for (let i = 0; i < playerTurns + enemyTurns; i++) {
+                const pNext = pIndex * pInterval;
+                const eNext = eIndex * eInterval;
+                
+                if (pIndex < playerTurns && (eIndex >= enemyTurns || pNext <= eNext)) {
+                    gameState.turnQueue.push({ type: 'player', speciesId: playerCreature.speciesId });
+                    pIndex++;
+                } else {
+                    gameState.turnQueue.push({ type: 'enemy', speciesId: enemy.speciesId });
+                    eIndex++;
+                }
+            }
+            
+            gameState.currentTurn = 0;
+            updateTurnDisplay();
+        }
+        
+        function updateTurnDisplay() {
+            const turnList = document.getElementById('turn-list');
+            turnList.innerHTML = '';
+            
+            gameState.turnQueue.forEach((turn, index) => {
+                const div = document.createElement('div');
+                div.className = 'turn-marker' + (index === gameState.currentTurn ? ' active' : '');
+                div.innerHTML = `${getCreatureSprite(turn.speciesId, 20)} ${turn.type === 'player' ? 'You' : 'Wild'}`;
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.gap = '5px';
+                turnList.appendChild(div);
+            });
+        }
+        
+        function updateBattleHp() {
+            const playerCreature = gameState.team[gameState.activeCreature];
+            const enemy = gameState.wildCreature;
+            
+            const playerPercent = (playerCreature.currentHp / playerCreature.maxHp) * 100;
+            const enemyPercent = (enemy.currentHp / enemy.maxHp) * 100;
+            
+            const playerBar = document.getElementById('player-hp-bar');
+            const enemyBar = document.getElementById('enemy-hp-bar');
+            
+            playerBar.style.width = playerPercent + '%';
+            enemyBar.style.width = enemyPercent + '%';
+            
+            playerBar.className = 'battle-hp-fill' + (playerPercent < 25 ? ' low' : '');
+            enemyBar.className = 'battle-hp-fill' + (enemyPercent < 25 ? ' low' : '');
+        }
+        
+        function showMainBattleMenu() {
+            document.getElementById('battle-actions').style.display = 'grid';
+            document.getElementById('moves-menu').style.display = 'none';
+            document.getElementById('team-menu').style.display = 'none';
+            document.getElementById('bag-menu').style.display = 'none';
+        }
+        
+        function showMoves() {
+            const creature = gameState.team[gameState.activeCreature];
+            const movesMenu = document.getElementById('moves-menu');
+            movesMenu.innerHTML = '';
+            
+            creature.moves.forEach(moveName => {
+                const move = moveData[moveName];
+                const btn = document.createElement('button');
+                btn.className = `move-btn ${move.type}-move`;
+                btn.innerHTML = `${moveName}<span class="move-power">${move.power > 0 ? 'Pow: ' + move.power : 'Status'}</span>`;
+                btn.onclick = () => useMove(moveName);
+                movesMenu.appendChild(btn);
+            });
+            
+            const backBtn = document.createElement('button');
+            backBtn.className = 'move-btn back-btn';
+            backBtn.textContent = '← Back';
+            backBtn.onclick = showMainBattleMenu;
+            movesMenu.appendChild(backBtn);
+            
+            document.getElementById('battle-actions').style.display = 'none';
+            movesMenu.style.display = 'grid';
+        }
+        
+        function showTeamBattle() {
+            const teamMenu = document.getElementById('team-menu');
+            teamMenu.innerHTML = '';
+            
+            gameState.team.forEach((creature, index) => {
+                if (index !== gameState.activeCreature && creature.currentHp > 0) {
+                    const btn = document.createElement('button');
+                    btn.className = 'move-btn';
+                    btn.innerHTML = `<div style="display:flex;align-items:center;gap:5px;">${getCreatureSprite(creature.speciesId, 28)} ${creature.name}</div><span class="move-power">Lv.${creature.level} HP:${creature.currentHp}/${creature.maxHp}</span>`;
+                    btn.onclick = () => switchCreature(index);
+                    teamMenu.appendChild(btn);
+                }
+            });
+            
+            const backBtn = document.createElement('button');
+            backBtn.className = 'move-btn back-btn';
+            backBtn.textContent = '← Back';
+            backBtn.onclick = showMainBattleMenu;
+            teamMenu.appendChild(backBtn);
+            
+            document.getElementById('battle-actions').style.display = 'none';
+            document.getElementById('bag-menu').style.display = 'none';
+            teamMenu.style.display = 'grid';
+        }
+        
+        function switchCreature(index) {
+            gameState.activeCreature = index;
+            const creature = gameState.team[index];
+            
+            document.getElementById('player-sprite').innerHTML = getCreatureSprite(creature.speciesId, 70);
+            document.getElementById('player-name').textContent = creature.name;
+            document.getElementById('player-level').textContent = `Lv. ${creature.level}`;
+            updateBattleHp();
+            
+            document.getElementById('battle-message').textContent = `Go, ${creature.name}!`;
+            
+            // Recalculate turns after switch
+            calculateTurnOrder();
+            
+            showMainBattleMenu();
+            
+            // Enemy gets a turn after switch
+            setTimeout(() => enemyTurn(), 1000);
+        }
+        
+        function useMove(moveName) {
+            if (gameState.battleOver) return;
+            
+            const move = moveData[moveName];
+            const attacker = gameState.team[gameState.activeCreature];
+            const defender = gameState.wildCreature;
+            
+            // Check accuracy
+            if (Math.random() * 100 > move.accuracy) {
+                document.getElementById('battle-message').textContent = `${attacker.name}'s attack missed!`;
+                advanceTurn();
+                return;
+            }
+            
+            // Calculate damage
+            let damage = 0;
+            if (move.power > 0) {
+                damage = calculateDamage(attacker, defender, move);
+                defender.currentHp = Math.max(0, defender.currentHp - damage);
+                updateBattleHp();
+                
+                let effectiveness = getEffectiveness(move.type, defender.type);
+                let effectMsg = '';
+                if (effectiveness > 1) effectMsg = " It's super effective!";
+                if (effectiveness < 1) effectMsg = " It's not very effective...";
+                
+                document.getElementById('battle-message').textContent = 
+                    `${attacker.name} used ${moveName}! Dealt ${damage} damage!${effectMsg}`;
+            } else {
+                // Status move
+                document.getElementById('battle-message').textContent = `${attacker.name} used ${moveName}!`;
+                if (move.effect === 'heal') {
+                    const healAmount = Math.floor(attacker.maxHp * 0.3);
+                    attacker.currentHp = Math.min(attacker.maxHp, attacker.currentHp + healAmount);
+                    updateBattleHp();
+                }
+            }
+            
+            // Check if enemy fainted
+            if (defender.currentHp <= 0) {
+                setTimeout(() => enemyFainted(), 1000);
+                return;
+            }
+            
+            advanceTurn();
+        }
+        
+        function calculateDamage(attacker, defender, move) {
+            const effectiveness = getEffectiveness(move.type, defender.type);
+            const baseDamage = ((2 * attacker.level / 5 + 2) * move.power * attacker.atk / defender.def / 50 + 2);
+            const randomFactor = 0.85 + Math.random() * 0.15;
+            return Math.floor(baseDamage * effectiveness * randomFactor);
+        }
+        
+        function getEffectiveness(attackType, defenderType) {
+            if (attackType === 'fire' && defenderType === 'grass') return 2;
+            if (attackType === 'fire' && defenderType === 'water') return 0.5;
+            if (attackType === 'water' && defenderType === 'fire') return 2;
+            if (attackType === 'water' && defenderType === 'grass') return 0.5;
+            if (attackType === 'grass' && defenderType === 'water') return 2;
+            if (attackType === 'grass' && defenderType === 'fire') return 0.5;
+            return 1;
+        }
+        
+        function advanceTurn() {
+            gameState.currentTurn++;
+            
+            if (gameState.currentTurn >= gameState.turnQueue.length) {
+                // Reset turn queue
+                calculateTurnOrder();
+            }
+            
+            updateTurnDisplay();
+            
+            // Check whose turn it is
+            const nextTurn = gameState.turnQueue[gameState.currentTurn];
+            if (nextTurn && nextTurn.type === 'enemy') {
+                setTimeout(() => enemyTurn(), 1000);
+            } else {
+                showMainBattleMenu();
+            }
+        }
+        
+        function enemyTurn() {
+            if (gameState.battleOver) return;
+            
+            const enemy = gameState.wildCreature;
+            const player = gameState.team[gameState.activeCreature];
+            
+            // Pick random move
+            const moveName = enemy.moves[Math.floor(Math.random() * enemy.moves.length)];
+            const move = moveData[moveName];
+            
+            // Check accuracy
+            if (Math.random() * 100 > move.accuracy) {
+                document.getElementById('battle-message').textContent = `Wild ${enemy.name}'s attack missed!`;
+                advanceTurn();
+                return;
+            }
+            
+            if (move.power > 0) {
+                const damage = calculateDamage(enemy, player, move);
+                player.currentHp = Math.max(0, player.currentHp - damage);
+                updateBattleHp();
+                updateStatsDisplay();
+                
+                document.getElementById('battle-message').textContent = 
+                    `Wild ${enemy.name} used ${moveName}! Dealt ${damage} damage!`;
+            }
+            
+            // Check if player fainted
+            if (player.currentHp <= 0) {
+                setTimeout(() => playerFainted(), 1000);
+                return;
+            }
+            
+            advanceTurn();
+        }
+        
+        function enemyFainted() {
+            gameState.battleOver = true;
+            const enemy = gameState.wildCreature;
+            const player = gameState.team[gameState.activeCreature];
+            
+            // Calculate XP - more XP for easier leveling!
+            const xpGain = Math.floor(enemy.level * 25);
+            player.xp += xpGain;
+            
+            document.getElementById('battle-message').textContent = 
+                `Wild ${enemy.name} fainted! Gained ${xpGain} XP!`;
+            
+            // Check level up
+            while (player.xp >= player.xpToNext) {
+                player.xp -= player.xpToNext;
+                levelUp(player);
+            }
+            
+            setTimeout(() => endBattle(), 2000);
+        }
+        
+        function levelUp(creature) {
+            creature.level++;
+            const species = creatureData[creature.speciesId];
+            
+            creature.maxHp = Math.floor(species.baseHp + (creature.level * 2));
+            creature.currentHp = Math.min(creature.currentHp + 10, creature.maxHp);
+            creature.atk = Math.floor(species.baseAtk + (creature.level * 1.5));
+            creature.def = Math.floor(species.baseDef + (creature.level * 1.5));
+            creature.spd = Math.floor(species.baseSpd + (creature.level * 1));
+            creature.xpToNext = creature.level * 15;
+            
+            // Learn new move
+            const moveIndex = Math.min(4, 1 + Math.floor(creature.level / 5));
+            if (species.moves[moveIndex - 1] && !creature.moves.includes(species.moves[moveIndex - 1])) {
+                if (creature.moves.length < 4) {
+                    creature.moves.push(species.moves[moveIndex - 1]);
+                    showNotification(`${creature.name} learned ${species.moves[moveIndex - 1]}!`);
+                }
+            }
+            
+            showNotification(`${creature.name} grew to level ${creature.level}!`);
+            
+            // Check evolution
+            if (creature.evolvesTo && creature.level >= creature.evolveLevel) {
+                evolveCreature(creature);
+            }
+        }
+        
+        function evolveCreature(creature) {
+            const oldSpeciesId = creature.speciesId;
+            const oldName = creature.name;
+            const newSpeciesId = creature.evolvesTo;
+            const newSpecies = creatureData[newSpeciesId];
+            
+            // Show evolution overlay
+            const overlay = document.getElementById('evolution-overlay');
+            const text = document.getElementById('evolution-text');
+            const creatureDiv = document.getElementById('evolution-creature');
+            const sparkles = document.getElementById('evolution-sparkles');
+            const continueBtn = document.getElementById('evolution-continue');
+            
+            overlay.style.display = 'flex';
+            text.textContent = `What? ${oldName} is evolving!`;
+            creatureDiv.innerHTML = getCreatureSprite(oldSpeciesId, 100);
+            continueBtn.style.display = 'none';
+            sparkles.innerHTML = '';
+            
+            // Start glowing animation
+            setTimeout(() => {
+                creatureDiv.classList.add('evolving');
+                
+                // Add sparkles
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => {
+                        const sparkle = document.createElement('div');
+                        sparkle.className = 'sparkle';
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 50 + Math.random() * 50;
+                        sparkle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                        sparkle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                        sparkle.style.left = '96px';
+                        sparkle.style.top = '96px';
+                        sparkle.style.background = ['#fff', '#ffd700', '#ff69b4', '#00ffff'][Math.floor(Math.random() * 4)];
+                        sparkles.appendChild(sparkle);
+                    }, i * 100);
+                }
+            }, 500);
+            
+            // Flash and change to new creature
+            setTimeout(() => {
+                creatureDiv.classList.remove('evolving');
+                creatureDiv.classList.add('evolve-flash');
+                creatureDiv.innerHTML = getCreatureSprite(newSpeciesId, 100);
+                
+                // Update creature data
+                creature.speciesId = newSpeciesId;
+                creature.name = newSpecies.name;
+                creature.colors = newSpecies.colors;
+                creature.moves = newSpecies.moves.slice(0, 4);
+                creature.evolvesTo = newSpecies.evolvesTo;
+                creature.evolveLevel = newSpecies.evolveLevel;
+                
+                // Recalculate stats with new base
+                creature.maxHp = Math.floor(newSpecies.baseHp + (creature.level * 2));
+                creature.currentHp = creature.maxHp;
+                creature.atk = Math.floor(newSpecies.baseAtk + (creature.level * 1.5));
+                creature.def = Math.floor(newSpecies.baseDef + (creature.level * 1.5));
+                creature.spd = Math.floor(newSpecies.baseSpd + (creature.level * 1));
+                
+                text.textContent = `Congratulations! ${oldName} evolved into ${creature.name}!`;
+            }, 3000);
+            
+            // Show continue button
+            setTimeout(() => {
+                creatureDiv.classList.remove('evolve-flash');
+                continueBtn.style.display = 'block';
+            }, 4000);
+        }
+        
+        function closeEvolution() {
+            document.getElementById('evolution-overlay').style.display = 'none';
+            document.getElementById('evolution-sparkles').innerHTML = '';
+            updateTeamDisplay();
+            updateStatsDisplay();
+        }
+        
+        function playerFainted() {
+            const player = gameState.team[gameState.activeCreature];
+            document.getElementById('battle-message').textContent = `${player.name} fainted!`;
+            
+            // Check for other alive creatures
+            const aliveIndex = gameState.team.findIndex((c, i) => i !== gameState.activeCreature && c.currentHp > 0);
+            
+            if (aliveIndex !== -1) {
+                setTimeout(() => {
+                    document.getElementById('battle-message').textContent = 'Choose another creature!';
+                    showTeamBattle();
+                }, 1500);
+            } else {
+                gameState.battleOver = true;
+                setTimeout(() => {
+                    document.getElementById('battle-message').textContent = 'All your creatures fainted! Healing and returning...';
+                    // Heal all creatures
+                    gameState.team.forEach(c => c.currentHp = c.maxHp);
+                    setTimeout(() => endBattle(), 2000);
+                }, 1500);
+            }
+        }
+        
+        function attemptCatch() {
+            if (gameState.catchBalls <= 0) {
+                document.getElementById('battle-message').textContent = "No catch balls left!";
+                return;
+            }
+            
+            if (gameState.team.length >= 6) {
+                document.getElementById('battle-message').textContent = "Team is full! (Max 6 creatures)";
+                return;
+            }
+            
+            gameState.catchBalls--;
+            updateTeamDisplay();
+            
+            const enemy = gameState.wildCreature;
+            const hpPercent = enemy.currentHp / enemy.maxHp;
+            
+            // Catch rate based on HP
+            const catchRate = (1 - hpPercent) * 0.5 + 0.2;
+            
+            document.getElementById('enemy-sprite').classList.add('catch-animation');
+            document.getElementById('battle-message').textContent = "Throwing ball...";
+            
+            setTimeout(() => {
+                document.getElementById('enemy-sprite').classList.remove('catch-animation');
+                
+                if (Math.random() < catchRate) {
+                    gameState.battleOver = true;
+                    gameState.team.push(gameState.wildCreature);
+                    document.getElementById('battle-message').textContent = `Caught ${enemy.name}!`;
+                    showNotification(`${enemy.name} joined your team!`);
+                    setTimeout(() => endBattle(), 2000);
+                } else {
+                    document.getElementById('battle-message').textContent = `${enemy.name} broke free!`;
+                    // Enemy gets a turn
+                    advanceTurn();
+                }
+            }, 1500);
+        }
+        
+        function runAway() {
+            const player = gameState.team[gameState.activeCreature];
+            const enemy = gameState.wildCreature;
+            
+            const escapeChance = (player.spd / enemy.spd) * 0.5 + 0.3;
+            
+            if (Math.random() < escapeChance) {
+                document.getElementById('battle-message').textContent = "Got away safely!";
+                setTimeout(() => endBattle(), 1000);
+            } else {
+                document.getElementById('battle-message').textContent = "Couldn't escape!";
+                advanceTurn();
+            }
+        }
+        
+        function endBattle() {
+            gameState.inBattle = false;
+            gameState.wildCreature = null;
+            document.getElementById('battle-screen').style.display = 'none';
+            updateTeamDisplay();
+            updateStatsDisplay();
+        }
+        
+        // ============ MENU FUNCTIONS ============
+        function toggleMenu() {
+            const menu = document.getElementById('menu-overlay');
+            if (menu.style.display === 'flex') {
+                closeMenu();
+            } else {
+                showMenu();
+            }
+        }
+        
+        function showMenu() {
+            const menu = document.getElementById('menu-overlay');
+            const creaturesDiv = document.getElementById('menu-creatures');
+            creaturesDiv.innerHTML = '';
+            
+            // Show player info at top
+            const playerInfo = document.createElement('div');
+            playerInfo.className = 'menu-creature';
+            playerInfo.style.background = '#0f3460';
+            playerInfo.style.borderColor = '#e94560';
+            
+            const hatClass = gameState.playerGender === 'girl' ? 'girl-hat' : '';
+            const hairClass = gameState.playerGender === 'girl' ? 'girl-hair' : 'boy-hair';
+            
+            playerInfo.innerHTML = `
+                <div class="pixel-trainer-small" style="margin-right: 10px;">
+                    <div class="trainer-hat ${hatClass}"></div>
+                    <div class="trainer-hair ${hairClass}"></div>
+                    <div class="trainer-head"></div>
+                    <div class="trainer-eyes"></div>
+                    <div class="trainer-body"></div>
+                    <div class="trainer-arms"></div>
+                    <div class="trainer-legs"></div>
+                </div>
+                <div class="menu-creature-info">
+                    <div class="menu-creature-name">${gameState.playerName}</div>
+                    <div class="menu-creature-stats">
+                        Area: ${areas[gameState.currentArea].name}<br>
+                        Catch Balls: ${gameState.catchBalls}
+                    </div>
+                </div>
+            `;
+            creaturesDiv.appendChild(playerInfo);
+            
+            gameState.team.forEach(creature => {
+                const div = document.createElement('div');
+                div.className = 'menu-creature';
+                div.innerHTML = `
+                    <div style="min-width:50px;">${getCreatureSprite(creature.speciesId, 40)}</div>
+                    <div class="menu-creature-info">
+                        <div class="menu-creature-name">${creature.name}</div>
+                        <div class="menu-creature-stats">
+                            Lv.${creature.level} | HP: ${creature.currentHp}/${creature.maxHp}<br>
+                            ATK: ${creature.atk} | DEF: ${creature.def} | SPD: ${creature.spd}
+                        </div>
+                    </div>
+                `;
+                creaturesDiv.appendChild(div);
+            });
+            
+            menu.style.display = 'flex';
+        }
+        
+        function closeMenu() {
+            document.getElementById('menu-overlay').style.display = 'none';
+        }
+        
+        function toggleAreaSelect() {
+            const areaSelect = document.getElementById('area-select');
+            if (areaSelect.style.display === 'flex') {
+                closeAreaSelect();
+            } else {
+                showAreaSelect();
+            }
+        }
+        
+        function showAreaSelect() {
+            const areaSelect = document.getElementById('area-select');
+            const areaList = document.getElementById('area-list');
+            areaList.innerHTML = '';
+            
+            const highestLevel = Math.max(...gameState.team.map(c => c.level));
+            
+            areas.forEach((area, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'area-btn';
+                const unlocked = highestLevel >= area.unlockLevel;
+                btn.disabled = !unlocked;
+                
+                btn.innerHTML = `
+                    <span>${area.icon} ${area.name} (Lv.${area.levelRange[0]}-${area.levelRange[1]})</span>
+                    ${!unlocked ? '<span class="area-locked"></span>' : ''}
+                `;
+                
+                if (unlocked) {
+                    btn.onclick = () => travelToArea(index);
+                }
+                
+                if (index === gameState.currentArea) {
+                    btn.style.borderColor = '#e94560';
+                }
+                
+                areaList.appendChild(btn);
+            });
+            
+            areaSelect.style.display = 'flex';
+        }
+        
+        function closeAreaSelect() {
+            document.getElementById('area-select').style.display = 'none';
+        }
+        
+        function travelToArea(index) {
+            gameState.currentArea = index;
+            gameState.playerX = 4;
+            gameState.playerY = 4;
+            
+            const player = document.getElementById('player');
+            player.style.left = (gameState.playerX * 40) + 'px';
+            player.style.top = (gameState.playerY * 40) + 'px';
+            
+            generateMap();
+            closeAreaSelect();
+            
+            // Give some catch balls and a potion when traveling
+            gameState.catchBalls = Math.min(gameState.catchBalls + 3, 30);
+            gameState.items.potion = Math.min(gameState.items.potion + 1, 10);
+            updateTeamDisplay();
+            
+            showNotification(`Arrived at ${areas[index].name}!`);
+        }
+        
+        function showNotification(text) {
+            const notif = document.getElementById('notification');
+            notif.textContent = text;
+            notif.style.display = 'block';
+            
+            setTimeout(() => {
+                notif.style.display = 'none';
+            }, 2500);
+        }
+    </script>
+</body>
+</html>

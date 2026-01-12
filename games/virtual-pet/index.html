@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Virtual Pet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg-gradient-1: #1a1a2e;
+      --bg-gradient-2: #16213e;
+      --card-bg: #0f3460;
+      --accent: #e94560;
+      --accent-glow: #ff6b8a;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --danger: #ef4444;
+      --text: #ffffff;
+      --text-dim: #94a3b8;
+    }
+
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: var(--text);
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    .game-container {
+      max-width: 420px;
+      margin: 0 auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      position: relative;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pet-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .evolution-stage {
+      background: var(--card-bg);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 2px solid var(--accent);
+    }
+
+    /* Stats Section */
+    .stats-container {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .stat-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .stat-icon {
+      width: 28px;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+
+    .stat-label {
+      width: 70px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .stat-bar-container {
+      flex: 1;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .stat-bar {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.5s ease, background 0.3s ease;
+    }
+
+    .stat-bar.hunger { background: linear-gradient(90deg, #f97316, #fb923c); }
+    .stat-bar.happiness { background: linear-gradient(90deg, #ec4899, #f472b6); }
+    .stat-bar.cleanliness { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+    .stat-bar.energy { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    .stat-bar.health { background: linear-gradient(90deg, #22c55e, #4ade80); }
+
+    .stat-bar.low { background: linear-gradient(90deg, #ef4444, #f87171) !important; }
+
+    /* Pet Display */
+    .pet-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 200px;
+    }
+
+    .pet-container {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pet {
+      font-size: 100px;
+      animation: float 3s ease-in-out infinite;
+      transition: transform 0.3s ease;
+      filter: drop-shadow(0 10px 30px rgba(233, 69, 96, 0.3));
+    }
+
+    .pet.happy {
+      animation: float 3s ease-in-out infinite, wiggle 0.5s ease-in-out;
+    }
+
+    .pet.sad {
+      filter: grayscale(0.5) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+    }
+
+    .pet.sick {
+      filter: hue-rotate(80deg) drop-shadow(0 10px 30px rgba(100, 200, 100, 0.3));
+      animation: float 3s ease-in-out infinite, shake 0.5s ease-in-out infinite;
+    }
+
+    .pet.sleeping {
+      animation: sleep 2s ease-in-out infinite;
+      filter: brightness(0.7) drop-shadow(0 10px 30px rgba(139, 92, 246, 0.3));
+    }
+
+    .pet.dead {
+      filter: grayscale(1);
+      animation: none;
+      opacity: 0.5;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    @keyframes sleep {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-5px) scale(1.05); }
+    }
+
+    .pet-status {
+      margin-top: 16px;
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      text-align: center;
+      min-height: 28px;
+    }
+
+    .pet-status.warning {
+      color: var(--warning);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .pet-status.danger {
+      color: var(--danger);
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Sleep Zzz */
+    .zzz {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      font-size: 1.5rem;
+      animation: zzzFloat 2s ease-in-out infinite;
+    }
+
+    @keyframes zzzFloat {
+      0%, 100% { transform: translateY(0) rotate(-10deg); opacity: 1; }
+      50% { transform: translateY(-20px) rotate(10deg); opacity: 0.5; }
+    }
+
+    /* Evolution Timer */
+    .evolution-timer {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .timer-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .timer-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .timer-requirements {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    .timer-requirements span.done {
+      color: var(--success);
+    }
+
+    .timer-requirements span.needed {
+      color: var(--warning);
+    }
+
+    /* Action Buttons */
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .action-btn {
+      background: var(--card-bg);
+      border: 3px solid transparent;
+      border-radius: 18px;
+      padding: 14px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+
+    .action-btn:not(:disabled):hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .action-btn .icon {
+      font-size: 1.8rem;
+    }
+
+    .action-btn .label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    /* Mini Game Overlay */
+    .game-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .game-overlay.active {
+      display: flex;
+    }
+
+    .game-header {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .game-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .game-score {
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    .game-field {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .ball {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      font-size: 40px;
+      text-align: center;
+      line-height: 50px;
+      transition: none;
+      cursor: grab;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .ball.flying {
+      transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .game-pet {
+      position: absolute;
+      font-size: 60px;
+      transition: all 0.5s ease;
+    }
+
+    .game-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--card-bg);
+      border: none;
+      color: var(--text);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .throw-hint {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .ball {
+      cursor: pointer;
+    }
+
+    .ball:hover {
+      transform: scale(1.1);
+    }
+
+    /* Evolution Choice Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 30px;
+      text-align: center;
+      max-width: 340px;
+      width: 100%;
+      animation: modalPop 0.3s ease;
+    }
+
+    @keyframes modalPop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .modal-text {
+      font-size: 1rem;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .modal-choices {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .choice-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent-glow));
+      border: none;
+      border-radius: 16px;
+      padding: 20px 30px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .choice-btn:active {
+      transform: scale(0.95);
+    }
+
+    .choice-btn .emoji {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .choice-btn .name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .restart-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent-glow));
+      border: none;
+      border-radius: 16px;
+      padding: 16px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Care Score Display */
+    .care-score {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--card-bg);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+    }
+
+    .care-score span {
+      color: var(--accent);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="pet-name">My Pet</div>
+      <div class="evolution-stage" id="evolutionStage">Blob</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-container">
+      <div class="stat-row">
+        <div class="stat-icon">🍖</div>
+        <div class="stat-label">Hunger</div>
+        <div class="stat-bar-container">
+          <div class="stat-bar hunger" id="hungerBar" style="width: 100%"></div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-icon">💖</div>
+        <div class="stat-label">Happy</div>
+        <div class="stat-bar-container">
+          <div class="stat-bar happiness" id="happinessBar" style="width: 100%"></div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-icon">🛁</div>
+        <div class="stat-label">Clean</div>
+        <div class="stat-bar-container">
+          <div class="stat-bar cleanliness" id="cleanlinessBar" style="width: 100%"></div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-label">Energy</div>
+        <div class="stat-bar-container">
+          <div class="stat-bar energy" id="energyBar" style="width: 100%"></div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-icon">❤️</div>
+        <div class="stat-label">Health</div>
+        <div class="stat-bar-container">
+          <div class="stat-bar health" id="healthBar" style="width: 100%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evolution Timer -->
+    <div class="evolution-timer">
+      <div class="timer-label">Next Evolution In</div>
+      <div class="timer-value" id="timerValue">3:00</div>
+      <div class="timer-requirements" id="timerRequirements">
+        <span class="needed">🍖 Feed once</span> • <span class="needed">⚽ Play once</span>
+      </div>
+    </div>
+
+    <!-- Pet Area -->
+    <div class="pet-area">
+      <div class="care-score">Care: <span id="careScore">0</span></div>
+      <div class="pet-container">
+        <div class="pet" id="pet">🫧</div>
+        <div class="zzz" id="zzz" style="display: none;">💤</div>
+      </div>
+      <div class="pet-status" id="petStatus">Your blob is happy!</div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="action-btn" id="feedBtn" onclick="feed()">
+        <span class="icon">🍖</span>
+        <span class="label">Feed</span>
+      </button>
+      <button class="action-btn" id="playBtn" onclick="openPlayGame()">
+        <span class="icon">⚽</span>
+        <span class="label">Play</span>
+      </button>
+      <button class="action-btn" id="cleanBtn" onclick="clean()">
+        <span class="icon">🛁</span>
+        <span class="label">Clean</span>
+      </button>
+      <button class="action-btn" id="sleepBtn" onclick="sleep()">
+        <span class="icon">😴</span>
+        <span class="label">Sleep</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Ball Game Overlay -->
+  <div class="game-overlay" id="gameOverlay">
+    <button class="game-close" onclick="closePlayGame()">✕</button>
+    <div class="game-header">
+      <div class="game-title">⚽ Fetch!</div>
+      <div class="game-score">Catches: <span id="catchCount">0</span></div>
+    </div>
+    <div class="game-field" id="gameField">
+      <div class="ball" id="ball">⚽</div>
+      <div class="game-pet" id="gamePet">🫧</div>
+      <div class="throw-hint" id="throwHint">Click the ball to throw it!</div>
+    </div>
+  </div>
+
+  <!-- Evolution Choice Modal -->
+  <div class="modal-overlay" id="evolutionModal">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">🎉 Evolution Time!</div>
+      <div class="modal-text" id="modalText">Your pet is evolving!</div>
+      <div class="modal-choices" id="modalChoices"></div>
+    </div>
+  </div>
+
+  <!-- Death Modal -->
+  <div class="modal-overlay" id="deathModal">
+    <div class="modal">
+      <div class="modal-title">😢 Oh no...</div>
+      <div class="modal-text">Your pet has passed away from neglect. Take better care of your next pet!</div>
+      <button class="restart-btn" onclick="restartGame()">Try Again</button>
+    </div>
+  </div>
+
+  <!-- Final Evolution Modal -->
+  <div class="modal-overlay" id="finalModal">
+    <div class="modal">
+      <div class="modal-title" id="finalTitle">🎊 Congratulations!</div>
+      <div class="modal-text" id="finalText">Your pet has reached its final form!</div>
+      <div id="finalPetDisplay" style="font-size: 80px; margin: 20px 0;"></div>
+      <button class="restart-btn" onclick="restartGame()">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    // Game State
+    let gameState = {
+      hunger: 100,
+      happiness: 100,
+      cleanliness: 100,
+      energy: 100,
+      health: 100,
+      careScore: 0,
+      evolutionStage: 0, // 0: blob, 1: chicken, 2: fish, 3: final
+      evolutionTimer: 180, // 3 minutes in seconds
+      hasFed: false,
+      hasPlayed: false,
+      isSleeping: false,
+      isDead: false,
+      sickTimer: 0, // seconds of being sick/sad
+      finalFormChoice: null
+    };
+
+    const evolutionForms = [
+      { name: 'Blob', emoji: '🫧' },
+      { name: 'Chicken', emoji: '🐔' },
+      { name: 'Fish', emoji: '🐟' },
+      { name: 'Final', emoji: '?' }
+    ];
+
+    const finalForms = {
+      amazing: [
+        { name: 'Dragon', emoji: '🐉' },
+        { name: 'Unicorn', emoji: '🦄' }
+      ],
+      good: { name: 'Dog', emoji: '🐕' },
+      okay: { name: 'Cat', emoji: '🐱' },
+      poor: { name: 'Sad Rock', emoji: '🪨' }
+    };
+
+    // DOM Elements
+    const petEl = document.getElementById('pet');
+    const petStatusEl = document.getElementById('petStatus');
+    const evolutionStageEl = document.getElementById('evolutionStage');
+    const timerValueEl = document.getElementById('timerValue');
+    const timerRequirementsEl = document.getElementById('timerRequirements');
+    const careScoreEl = document.getElementById('careScore');
+    const zzzEl = document.getElementById('zzz');
+
+    // Initialize game
+    function init() {
+      updateUI();
+      setInterval(gameLoop, 1000);
+    }
+
+    // Main game loop (runs every second)
+    function gameLoop() {
+      if (gameState.isDead) return;
+
+      // Decrease stats over time
+      if (!gameState.isSleeping) {
+        gameState.hunger = Math.max(0, gameState.hunger - 0.5);
+        gameState.happiness = Math.max(0, gameState.happiness - 0.3);
+        gameState.cleanliness = Math.max(0, gameState.cleanliness - 0.2);
+        gameState.energy = Math.max(0, gameState.energy - 0.4);
+      } else {
+        // Sleeping restores energy
+        gameState.energy = Math.min(100, gameState.energy + 2);
+        if (gameState.energy >= 100) {
+          wakeUp();
+        }
+      }
+
+      // Health affected by other stats
+      const avgStats = (gameState.hunger + gameState.happiness + gameState.cleanliness + gameState.energy) / 4;
+      if (avgStats < 30) {
+        gameState.health = Math.max(0, gameState.health - 0.5);
+      } else if (avgStats > 70) {
+        gameState.health = Math.min(100, gameState.health + 0.2);
+      }
+
+      // Track sick/sad time
+      if (gameState.health < 30 || gameState.happiness < 20) {
+        gameState.sickTimer++;
+        // 30 minutes = 1800 seconds
+        if (gameState.sickTimer >= 1800) {
+          petDies();
+          return;
+        }
+      } else {
+        gameState.sickTimer = Math.max(0, gameState.sickTimer - 1);
+      }
+
+      // Evolution timer
+      if (gameState.evolutionStage < 3 && gameState.hasFed && gameState.hasPlayed) {
+        gameState.evolutionTimer--;
+        if (gameState.evolutionTimer <= 0) {
+          evolve();
+        }
+      }
+
+      // Decrease care score slowly if ignoring pet
+      if (gameState.hunger < 30 || gameState.happiness < 30) {
+        gameState.careScore = Math.max(0, gameState.careScore - 0.2);
+      }
+
+      updateUI();
+    }
+
+    // Update all UI elements
+    function updateUI() {
+      // Update stat bars
+      updateBar('hungerBar', gameState.hunger);
+      updateBar('happinessBar', gameState.happiness);
+      updateBar('cleanlinessBar', gameState.cleanliness);
+      updateBar('energyBar', gameState.energy);
+      updateBar('healthBar', gameState.health);
+
+      // Update pet appearance
+      const currentForm = evolutionForms[gameState.evolutionStage];
+      petEl.textContent = currentForm.emoji;
+      evolutionStageEl.textContent = currentForm.name;
+
+      // Update pet class based on state
+      petEl.className = 'pet';
+      if (gameState.isDead) {
+        petEl.classList.add('dead');
+      } else if (gameState.isSleeping) {
+        petEl.classList.add('sleeping');
+      } else if (gameState.health < 30) {
+        petEl.classList.add('sick');
+      } else if (gameState.happiness < 30) {
+        petEl.classList.add('sad');
+      } else if (gameState.happiness > 70) {
+        petEl.classList.add('happy');
+      }
+
+      // Update Zzz
+      zzzEl.style.display = gameState.isSleeping ? 'block' : 'none';
+
+      // Update status message
+      updateStatus();
+
+      // Update timer
+      const mins = Math.floor(gameState.evolutionTimer / 60);
+      const secs = gameState.evolutionTimer % 60;
+      timerValueEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+      // Update requirements
+      const fedClass = gameState.hasFed ? 'done' : 'needed';
+      const playedClass = gameState.hasPlayed ? 'done' : 'needed';
+      const fedCheck = gameState.hasFed ? '✓' : '';
+      const playedCheck = gameState.hasPlayed ? '✓' : '';
+      timerRequirementsEl.innerHTML = `
+        <span class="${fedClass}">🍖 Feed ${fedCheck}</span> • 
+        <span class="${playedClass}">⚽ Play ${playedCheck}</span>
+      `;
+
+      // Update care score
+      careScoreEl.textContent = Math.floor(gameState.careScore);
+
+      // Disable buttons when sleeping
+      document.getElementById('feedBtn').disabled = gameState.isSleeping || gameState.isDead;
+      document.getElementById('playBtn').disabled = gameState.isSleeping || gameState.isDead;
+      document.getElementById('cleanBtn').disabled = gameState.isSleeping || gameState.isDead;
+      document.getElementById('sleepBtn').disabled = gameState.isDead;
+    }
+
+    function updateBar(id, value) {
+      const bar = document.getElementById(id);
+      bar.style.width = value + '%';
+      if (value < 30) {
+        bar.classList.add('low');
+      } else {
+        bar.classList.remove('low');
+      }
+    }
+
+    function updateStatus() {
+      let status = '';
+      let statusClass = '';
+
+      if (gameState.isDead) {
+        status = '💀 Your pet has died...';
+        statusClass = 'danger';
+      } else if (gameState.isSleeping) {
+        status = '😴 Zzz... sleeping peacefully';
+      } else if (gameState.health < 30) {
+        status = '🤢 Your pet is sick! Take care of it!';
+        statusClass = 'danger';
+      } else if (gameState.sickTimer > 900) { // 15 minutes warning
+        const remaining = Math.ceil((1800 - gameState.sickTimer) / 60);
+        status = `⚠️ Critical! ${remaining} min until pet dies!`;
+        statusClass = 'danger';
+      } else if (gameState.hunger < 20) {
+        status = '😫 So hungry! Please feed me!';
+        statusClass = 'warning';
+      } else if (gameState.happiness < 20) {
+        status = '😢 So sad! Play with me!';
+        statusClass = 'warning';
+      } else if (gameState.cleanliness < 20) {
+        status = '🦨 Eww! I need a bath!';
+        statusClass = 'warning';
+      } else if (gameState.energy < 20) {
+        status = '😩 So tired! Let me sleep!';
+        statusClass = 'warning';
+      } else if (gameState.happiness > 80 && gameState.health > 80) {
+        const names = ['Blob', 'Chicken', 'Fish', 'Friend'][gameState.evolutionStage];
+        status = `🥰 Your ${names.toLowerCase()} is super happy!`;
+      } else {
+        const names = ['Blob', 'Chicken', 'Fish', 'Friend'][gameState.evolutionStage];
+        status = `😊 Your ${names.toLowerCase()} is doing fine!`;
+      }
+
+      petStatusEl.textContent = status;
+      petStatusEl.className = 'pet-status ' + statusClass;
+    }
+
+    // Actions
+    function feed() {
+      if (gameState.isSleeping || gameState.isDead) return;
+      
+      gameState.hunger = Math.min(100, gameState.hunger + 30);
+      gameState.hasFed = true;
+      gameState.careScore += 5;
+      
+      petEl.classList.add('happy');
+      setTimeout(() => petEl.classList.remove('happy'), 500);
+      
+      updateUI();
+    }
+
+    function clean() {
+      if (gameState.isSleeping || gameState.isDead) return;
+      
+      gameState.cleanliness = Math.min(100, gameState.cleanliness + 40);
+      gameState.careScore += 3;
+      
+      updateUI();
+    }
+
+    function sleep() {
+      if (gameState.isDead) return;
+      
+      if (gameState.isSleeping) {
+        wakeUp();
+      } else {
+        gameState.isSleeping = true;
+      }
+      
+      updateUI();
+    }
+
+    function wakeUp() {
+      gameState.isSleeping = false;
+      updateUI();
+    }
+
+    // Ball Game
+    let catchCount = 0;
+
+    function openPlayGame() {
+      if (gameState.isSleeping || gameState.isDead) return;
+      
+      document.getElementById('gameOverlay').classList.add('active');
+      document.getElementById('gamePet').textContent = evolutionForms[gameState.evolutionStage].emoji;
+      catchCount = 0;
+      document.getElementById('catchCount').textContent = '0';
+      resetBall();
+      setupBallControls();
+    }
+
+    function closePlayGame() {
+      document.getElementById('gameOverlay').classList.remove('active');
+      
+      if (catchCount > 0) {
+        gameState.happiness = Math.min(100, gameState.happiness + catchCount * 10);
+        gameState.hasPlayed = true;
+        gameState.careScore += catchCount * 3;
+        gameState.energy = Math.max(0, gameState.energy - 5);
+        updateUI();
+      }
+    }
+
+    function resetBall() {
+      const ball = document.getElementById('ball');
+      const field = document.getElementById('gameField');
+      const hint = document.getElementById('throwHint');
+      
+      ball.classList.remove('flying');
+      ball.style.left = (field.offsetWidth / 2 - 25) + 'px';
+      ball.style.top = (field.offsetHeight - 100) + 'px';
+      hint.style.display = 'block';
+      
+      // Reset pet position
+      const gamePet = document.getElementById('gamePet');
+      gamePet.style.left = (field.offsetWidth / 2 - 30) + 'px';
+      gamePet.style.top = '50px';
+    }
+
+    function setupBallControls() {
+      const ball = document.getElementById('ball');
+      
+      // Remove old listeners
+      ball.replaceWith(ball.cloneNode(true));
+      const newBall = document.getElementById('ball');
+      
+      // Simple click to throw
+      newBall.addEventListener('click', handleBallClick);
+      newBall.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        handleBallClick();
+      });
+    }
+
+    function handleBallClick() {
+      // Random throw direction
+      const randomX = (Math.random() - 0.5) * 200;
+      const throwPower = 150 + Math.random() * 100;
+      throwBall(randomX, throwPower);
+    }
+
+    function throwBall(deltaX, deltaY) {
+      const ball = document.getElementById('ball');
+      const field = document.getElementById('gameField');
+      const gamePet = document.getElementById('gamePet');
+      const hint = document.getElementById('throwHint');
+      
+      hint.style.display = 'none';
+      
+      // Calculate target position
+      const targetX = Math.max(20, Math.min(field.offsetWidth - 70, 
+        parseFloat(ball.style.left) + deltaX * 2));
+      const targetY = 80;
+      
+      // Throw the ball
+      ball.classList.add('flying');
+      ball.style.left = targetX + 'px';
+      ball.style.top = targetY + 'px';
+      
+      // Pet chases after a delay
+      setTimeout(() => {
+        gamePet.style.left = targetX + 'px';
+        gamePet.style.top = (targetY + 60) + 'px';
+        
+        // Pet catches and returns
+        setTimeout(() => {
+          catchCount++;
+          document.getElementById('catchCount').textContent = catchCount;
+          
+          // Pet brings ball back
+          gamePet.style.left = (field.offsetWidth / 2 - 30) + 'px';
+          gamePet.style.top = (field.offsetHeight - 180) + 'px';
+          
+          setTimeout(() => {
+            resetBall();
+          }, 600);
+        }, 500);
+      }, 400);
+    }
+
+    // Evolution
+    function evolve() {
+      if (gameState.evolutionStage >= 3) return;
+      
+      gameState.evolutionStage++;
+      gameState.evolutionTimer = 180;
+      gameState.hasFed = false;
+      gameState.hasPlayed = false;
+      
+      if (gameState.evolutionStage === 3) {
+        // Final evolution - determine form based on care score
+        showFinalEvolution();
+      } else {
+        // Show evolution message
+        showEvolutionMessage();
+      }
+      
+      updateUI();
+    }
+
+    function showEvolutionMessage() {
+      const modal = document.getElementById('evolutionModal');
+      const title = document.getElementById('modalTitle');
+      const text = document.getElementById('modalText');
+      const choices = document.getElementById('modalChoices');
+      
+      const newForm = evolutionForms[gameState.evolutionStage];
+      
+      title.textContent = '🎉 Evolution!';
+      text.textContent = `Your pet evolved into a ${newForm.name}! ${newForm.emoji}`;
+      choices.innerHTML = `
+        <button class="restart-btn" onclick="closeEvolutionModal()">Yay!</button>
+      `;
+      
+      modal.classList.add('active');
+    }
+
+    function closeEvolutionModal() {
+      document.getElementById('evolutionModal').classList.remove('active');
+    }
+
+    function showFinalEvolution() {
+      const modal = document.getElementById('evolutionModal');
+      const title = document.getElementById('modalTitle');
+      const text = document.getElementById('modalText');
+      const choices = document.getElementById('modalChoices');
+      
+      const score = gameState.careScore;
+      
+      if (score >= 100) {
+        // Amazing - let player choose
+        title.textContent = '🎊 Amazing Care!';
+        text.textContent = 'You took incredible care of your pet! Choose your final form:';
+        choices.innerHTML = `
+          <button class="choice-btn" onclick="chooseFinalForm('dragon')">
+            <span class="emoji">🐉</span>
+            <span class="name">Dragon</span>
+          </button>
+          <button class="choice-btn" onclick="chooseFinalForm('unicorn')">
+            <span class="emoji">🦄</span>
+            <span class="name">Unicorn</span>
+          </button>
+        `;
+      } else if (score >= 60) {
+        // Good - Dog
+        title.textContent = '🎉 Good Job!';
+        text.textContent = 'You took good care of your pet!';
+        choices.innerHTML = `
+          <button class="restart-btn" onclick="setFinalForm('dog')">Continue</button>
+        `;
+      } else if (score >= 30) {
+        // Okay - Cat
+        title.textContent = '😊 Not Bad!';
+        text.textContent = 'Your pet could have been happier, but did okay!';
+        choices.innerHTML = `
+          <button class="restart-btn" onclick="setFinalForm('cat')">Continue</button>
+        `;
+      } else {
+        // Poor - Sad Rock
+        title.textContent = '😢 Oh dear...';
+        text.textContent = 'Your pet wasn\'t very happy...';
+        choices.innerHTML = `
+          <button class="restart-btn" onclick="setFinalForm('rock')">Continue</button>
+        `;
+      }
+      
+      modal.classList.add('active');
+    }
+
+    function chooseFinalForm(choice) {
+      closeEvolutionModal();
+      
+      const finalModal = document.getElementById('finalModal');
+      const finalTitle = document.getElementById('finalTitle');
+      const finalText = document.getElementById('finalText');
+      const finalPet = document.getElementById('finalPetDisplay');
+      
+      let form;
+      if (choice === 'dragon') {
+        form = finalForms.amazing[0];
+      } else {
+        form = finalForms.amazing[1];
+      }
+      
+      finalTitle.textContent = '🎊 Congratulations!';
+      finalText.textContent = `Your pet became a magnificent ${form.name}!`;
+      finalPet.textContent = form.emoji;
+      petEl.textContent = form.emoji;
+      evolutionStageEl.textContent = form.name;
+      
+      finalModal.classList.add('active');
+    }
+
+    function setFinalForm(type) {
+      closeEvolutionModal();
+      
+      const finalModal = document.getElementById('finalModal');
+      const finalTitle = document.getElementById('finalTitle');
+      const finalText = document.getElementById('finalText');
+      const finalPet = document.getElementById('finalPetDisplay');
+      
+      let form;
+      if (type === 'dog') {
+        form = finalForms.good;
+      } else if (type === 'cat') {
+        form = finalForms.okay;
+      } else {
+        form = finalForms.poor;
+      }
+      
+      finalText.textContent = `Your pet became a ${form.name}!`;
+      finalPet.textContent = form.emoji;
+      petEl.textContent = form.emoji;
+      evolutionStageEl.textContent = form.name;
+      
+      finalModal.classList.add('active');
+    }
+
+    function petDies() {
+      gameState.isDead = true;
+      updateUI();
+      document.getElementById('deathModal').classList.add('active');
+    }
+
+    function restartGame() {
+      // Reset all state
+      gameState = {
+        hunger: 100,
+        happiness: 100,
+        cleanliness: 100,
+        energy: 100,
+        health: 100,
+        careScore: 0,
+        evolutionStage: 0,
+        evolutionTimer: 180,
+        hasFed: false,
+        hasPlayed: false,
+        isSleeping: false,
+        isDead: false,
+        sickTimer: 0,
+        finalFormChoice: null
+      };
+      
+      // Close all modals
+      document.getElementById('deathModal').classList.remove('active');
+      document.getElementById('evolutionModal').classList.remove('active');
+      document.getElementById('finalModal').classList.remove('active');
+      
+      updateUI();
+    }
+
+    // Start the game
+    init();
+  </script>
+</body>
+</html>
+

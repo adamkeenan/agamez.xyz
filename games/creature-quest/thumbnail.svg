@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="creatureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35"/>
+      <stop offset="100%" style="stop-color:#ff4444"/>
+    </linearGradient>
+    <linearGradient id="grassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#55efc4"/>
+      <stop offset="100%" style="stop-color:#00b894"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect fill="url(#bgGrad)" width="200" height="200"/>
+  
+  <!-- Ground/grass area -->
+  <rect fill="url(#grassGrad)" x="0" y="140" width="200" height="60"/>
+  
+  <!-- Grass tufts -->
+  <path d="M 20 140 Q 25 130 30 140" stroke="#26de81" stroke-width="3" fill="none"/>
+  <path d="M 30 140 Q 35 130 40 140" stroke="#26de81" stroke-width="3" fill="none"/>
+  <path d="M 170 140 Q 175 130 180 140" stroke="#26de81" stroke-width="3" fill="none"/>
+  <path d="M 180 140 Q 185 130 190 140" stroke="#26de81" stroke-width="3" fill="none"/>
+  
+  <!-- Main creature body (fire type) -->
+  <ellipse cx="100" cy="120" rx="35" ry="30" fill="url(#creatureGrad)"/>
+  
+  <!-- Creature head -->
+  <circle cx="100" cy="90" r="25" fill="url(#creatureGrad)"/>
+  
+  <!-- Creature eyes -->
+  <circle cx="92" cy="88" r="6" fill="#fff"/>
+  <circle cx="108" cy="88" r="6" fill="#fff"/>
+  <circle cx="92" cy="88" r="3" fill="#000"/>
+  <circle cx="108" cy="88" r="3" fill="#000"/>
+  
+  <!-- Creature mouth -->
+  <ellipse cx="100" cy="98" rx="8" ry="5" fill="#ffaa00"/>
+  
+  <!-- Creature tail (flame) -->
+  <ellipse cx="65" cy="125" rx="12" ry="18" fill="#ffaa00" opacity="0.9"/>
+  <ellipse cx="60" cy="120" rx="8" ry="12" fill="#ffd700" opacity="0.8"/>
+  <ellipse cx="58" cy="115" rx="5" ry="8" fill="#fff" opacity="0.7"/>
+  
+  <!-- Creature legs -->
+  <ellipse cx="85" cy="145" rx="8" ry="12" fill="url(#creatureGrad)"/>
+  <ellipse cx="115" cy="145" rx="8" ry="12" fill="url(#creatureGrad)"/>
+  
+  <!-- Creature paws -->
+  <circle cx="85" cy="155" r="6" fill="#ffaa00"/>
+  <circle cx="115" cy="155" r="6" fill="#ffaa00"/>
+  
+  <!-- Sparkles/magic effects -->
+  <circle cx="50" cy="60" r="3" fill="#fff" opacity="0.8">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="150" cy="70" r="2.5" fill="#ffd700" opacity="0.8">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="70" cy="80" r="2" fill="#ff6b8a" opacity="0.7">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Title text area (subtle) -->
+  <text x="100" y="185" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#e94560" text-anchor="middle" opacity="0.9">CREATURE QUEST</text>
+  
+  <!-- Border glow -->
+  <rect x="2" y="2" width="196" height="196" fill="none" stroke="#e94560" stroke-width="2" opacity="0.3" rx="8"/>
+</svg>
+

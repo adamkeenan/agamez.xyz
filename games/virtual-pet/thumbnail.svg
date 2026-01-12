@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f3460"/>
+      <stop offset="100%" style="stop-color:#1a4a7a"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect fill="url(#bgGrad)" width="200" height="200"/>
+  
+  <!-- Card background -->
+  <rect fill="url(#cardGrad)" x="20" y="20" width="160" height="160" rx="20" opacity="0.9"/>
+  
+  <!-- Pet blob (main character) -->
+  <circle cx="100" cy="100" r="35" fill="#e94560" opacity="0.9">
+    <animate attributeName="cy" values="100;95;100" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Pet eyes -->
+  <circle cx="90" cy="95" r="4" fill="#ffffff"/>
+  <circle cx="110" cy="95" r="4" fill="#ffffff"/>
+  <circle cx="90" cy="95" r="2" fill="#1a1a2e"/>
+  <circle cx="110" cy="95" r="2" fill="#1a1a2e"/>
+  
+  <!-- Pet smile -->
+  <path d="M 85 105 Q 100 115 115 105" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Stats bars (decorative) -->
+  <rect x="30" y="140" width="140" height="6" rx="3" fill="rgba(255,255,255,0.2)"/>
+  <rect x="30" y="140" width="100" height="6" rx="3" fill="#f97316"/>
+  
+  <rect x="30" y="150" width="140" height="6" rx="3" fill="rgba(255,255,255,0.2)"/>
+  <rect x="30" y="150" width="120" height="6" rx="3" fill="#ec4899"/>
+  
+  <rect x="30" y="160" width="140" height="6" rx="3" fill="rgba(255,255,255,0.2)"/>
+  <rect x="30" y="160" width="110" height="6" rx="3" fill="#06b6d4"/>
+  
+  <!-- Action icons (decorative) -->
+  <text x="40" y="50" font-size="20" fill="#ff6b8a">🍖</text>
+  <text x="70" y="50" font-size="20" fill="#ff6b8a">⚽</text>
+  <text x="100" y="50" font-size="20" fill="#ff6b8a">🛁</text>
+  <text x="130" y="50" font-size="20" fill="#ff6b8a">😴</text>
+  
+  <!-- Glow effect -->
+  <circle cx="100" cy="100" r="40" fill="none" stroke="#ff6b8a" stroke-width="2" opacity="0.3">
+    <animate attributeName="r" values="40;45;40" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>
+
